@@ -20,7 +20,7 @@ interface Planet {
 const NASASolarSystem: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const cleanupRef = useRef<() => void>();
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -86,10 +86,8 @@ const NASASolarSystem: React.FC = () => {
     // Sun
     const sunMaterial = new THREE.MeshBasicMaterial({
       map: loader.load('/textures/sun.jpg'),
-      emissive: new THREE.Color(1.5, 1.2, 0.8),
-      emissiveIntensity: 1.8,
       toneMapped: false,
-      color: new THREE.Color(1.2, 1.1, 0.9)
+      color: new THREE.Color(1.5, 1.2, 0.9)
     });
     const sun = new THREE.Mesh(new THREE.SphereGeometry(5, 64, 64), sunMaterial);
     scene.add(sun);
@@ -104,21 +102,24 @@ const NASASolarSystem: React.FC = () => {
 
     // Planets with portfolio routes
     const planetsData = [
-      { name: 'Mercury', size: 0.5, dist: 8, speed: 0.0041, texture: 'mercury.jpg', route: '/about', initialAngle: 2.1 },
-      { name: 'Venus', size: 0.9, dist: 11, speed: 0.0016, texture: 'venus.jpg', route: '/resume', initialAngle: 4.8 },
-      { name: 'Earth', size: 1, dist: 15, speed: 0.001, texture: 'earth.jpg', route: '/projects', initialAngle: 3.45 },
-      { name: 'Mars', size: 0.8, dist: 19, speed: 0.00053, texture: 'mars.jpg', route: '/resume#experience', initialAngle: 0.9 },
-      { name: 'Jupiter', size: 2, dist: 25, speed: 0.000084, texture: 'jupiter.jpg', route: '/resume#education', initialAngle: 2.7 },
-      { name: 'Saturn', size: 1.7, dist: 31, speed: 0.000034, texture: 'saturn.jpg', route: '/resume#skills', initialAngle: 5.8, hasRings: true },
-      { name: 'Uranus', size: 1.2, dist: 37, speed: 0.000012, texture: 'uranus.jpg', route: '/resume#certifications', initialAngle: 1.2 },
-      { name: 'Neptune', size: 1.15, dist: 43, speed: 0.000006, texture: 'neptune.jpg', route: '/contact', initialAngle: 4.3 }
+      { name: 'Mercury', label: 'About', size: 0.5, dist: 8, speed: 0.0041, texture: 'mercury.jpg', route: '/about', initialAngle: 2.1, moons: [] },
+      { name: 'Venus', label: 'Resume', size: 0.9, dist: 11, speed: 0.0016, texture: 'venus.jpg', route: '/resume', initialAngle: 4.8, moons: [] },
+      { name: 'Earth', label: 'Projects', size: 1, dist: 15, speed: 0.001, texture: 'earth.jpg', route: '/projects', initialAngle: 3.45, moons: [{ size: 0.27, dist: 2, speed: 0.037 }] },
+      { name: 'Mars', label: 'Experience', size: 0.8, dist: 19, speed: 0.00053, texture: 'mars.jpg', route: '/resume#experience', initialAngle: 0.9, moons: [{ size: 0.1, dist: 1.5, speed: 0.05 }, { size: 0.08, dist: 2, speed: 0.03 }] },
+      { name: 'Jupiter', label: 'Education', size: 2, dist: 25, speed: 0.000084, texture: 'jupiter.jpg', route: '/resume#education', initialAngle: 2.7, moons: [{ size: 0.15, dist: 3, speed: 0.02 }, { size: 0.13, dist: 3.5, speed: 0.015 }, { size: 0.2, dist: 4, speed: 0.01 }, { size: 0.18, dist: 4.5, speed: 0.008 }] },
+      { name: 'Saturn', label: 'Skills', size: 1.7, dist: 31, speed: 0.000034, texture: 'saturn.jpg', route: '/resume#skills', initialAngle: 5.8, hasRings: true, moons: [{ size: 0.12, dist: 3, speed: 0.015 }, { size: 0.1, dist: 3.5, speed: 0.012 }, { size: 0.15, dist: 4, speed: 0.01 }] },
+      { name: 'Uranus', label: 'Certifications', size: 1.2, dist: 37, speed: 0.000012, texture: 'uranus.jpg', route: '/resume#certifications', initialAngle: 1.2, moons: [{ size: 0.1, dist: 2.5, speed: 0.018 }, { size: 0.09, dist: 3, speed: 0.015 }] },
+      { name: 'Neptune', label: 'Contact', size: 1.15, dist: 43, speed: 0.000006, texture: 'neptune.jpg', route: '/contact', initialAngle: 4.3, moons: [{ size: 0.11, dist: 2.8, speed: 0.016 }] }
     ];
 
     const planets: Planet[] = [];
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    planetsData.forEach(data => {
+    const planetLabels: any[] = [];
+    const moonGroups: any[] = [];
+
+    planetsData.forEach((data, index) => {
       const orbitGroup = new THREE.Group();
       const planetGeometry = new THREE.SphereGeometry(data.size, 64, 64);
       const planetMaterial = new THREE.MeshStandardMaterial({
@@ -130,23 +131,58 @@ const NASASolarSystem: React.FC = () => {
       
       // Position planet
       planetMesh.position.x = data.dist;
+      planetMesh.userData = { label: data.label, name: data.name };
       orbitGroup.add(planetMesh);
       orbitGroup.rotation.y = data.initialAngle;
       
       // Add rings for Saturn
       if (data.hasRings) {
         const ringTexture = loader.load('/textures/saturn_ring.png');
-        const ringGeometry = new THREE.RingGeometry(data.size * 1.3, data.size * 2.2, 64);
-        const ringMaterial = new THREE.MeshBasicMaterial({
+        ringTexture.rotation = Math.PI / 2;
+        const ringGeometry = new THREE.RingGeometry(data.size * 1.4, data.size * 2.3, 64);
+        const ringMaterial = new THREE.MeshStandardMaterial({
           map: ringTexture,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.8
+          opacity: 0.7,
+          roughness: 0.8,
         });
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = Math.PI / 2;
+        ring.rotation.x = -Math.PI / 2.5;
         planetMesh.add(ring);
       }
+
+      // Add moons
+      if (data.moons && data.moons.length > 0) {
+        const moonGroup = new THREE.Group();
+        data.moons.forEach((moonData: any, moonIndex: number) => {
+          const moonGeometry = new THREE.SphereGeometry(moonData.size, 16, 16);
+          const moonMaterial = new THREE.MeshStandardMaterial({
+            color: 0xaaaaaa,
+            roughness: 0.9,
+            metalness: 0.1,
+          });
+          const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+          moonMesh.position.x = moonData.dist;
+          moonGroup.add(moonMesh);
+          
+          moonGroups.push({
+            group: moonGroup,
+            mesh: moonMesh,
+            speed: moonData.speed,
+            dist: moonData.dist,
+            angle: (moonIndex / data.moons.length) * Math.PI * 2
+          });
+        });
+        planetMesh.add(moonGroup);
+      }
+
+      // Create text label (will be positioned in DOM)
+      planetLabels.push({
+        planet: planetMesh,
+        label: data.label,
+        name: data.name
+      });
 
       // Orbit line
       const orbitGeometry = new THREE.BufferGeometry();
@@ -210,7 +246,8 @@ const NASASolarSystem: React.FC = () => {
           // Smooth camera animation before navigating
           const targetPos = planet.mesh.getWorldPosition(new THREE.Vector3());
           const direction = camera.position.clone().sub(targetPos).normalize();
-          const distance = planet.mesh.geometry.parameters.radius * 5;
+          const geometry = planet.mesh.geometry as THREE.SphereGeometry;
+          const distance = (geometry.parameters?.radius || 1) * 5;
           const newPos = targetPos.clone().add(direction.multiplyScalar(distance));
           
           const startPos = camera.position.clone();
@@ -243,6 +280,37 @@ const NASASolarSystem: React.FC = () => {
 
     window.addEventListener('click', onMouseClick);
 
+    // Create DOM labels container
+    const labelsContainer = document.createElement('div');
+    labelsContainer.style.position = 'absolute';
+    labelsContainer.style.top = '0';
+    labelsContainer.style.left = '0';
+    labelsContainer.style.width = '100%';
+    labelsContainer.style.height = '100%';
+    labelsContainer.style.pointerEvents = 'none';
+    container.appendChild(labelsContainer);
+
+    const labelElements: any[] = [];
+    planetLabels.forEach(labelData => {
+      const labelDiv = document.createElement('div');
+      labelDiv.textContent = labelData.label;
+      labelDiv.style.position = 'absolute';
+      labelDiv.style.color = '#FFD60A';
+      labelDiv.style.fontFamily = '"Orbitron", monospace';
+      labelDiv.style.fontSize = '12px';
+      labelDiv.style.fontWeight = '700';
+      labelDiv.style.textTransform = 'uppercase';
+      labelDiv.style.letterSpacing = '1px';
+      labelDiv.style.padding = '4px 8px';
+      labelDiv.style.background = 'rgba(11, 61, 145, 0.8)';
+      labelDiv.style.borderRadius = '4px';
+      labelDiv.style.border = '1px solid rgba(255, 214, 10, 0.5)';
+      labelDiv.style.backdropFilter = 'blur(5px)';
+      labelDiv.style.whiteSpace = 'nowrap';
+      labelsContainer.appendChild(labelDiv);
+      labelElements.push({ div: labelDiv, planet: labelData.planet });
+    });
+
     // Animation loop
     let speed = 0.4;
     const animate = () => {
@@ -252,6 +320,27 @@ const NASASolarSystem: React.FC = () => {
       planets.forEach(planet => {
         planet.orbitGroup.rotation.y += planet.orbitSpeed * speed;
         planet.mesh.rotation.y += planet.rotationSpeed;
+      });
+
+      // Animate moons
+      moonGroups.forEach(moonData => {
+        moonData.angle += moonData.speed;
+        moonData.mesh.position.x = Math.cos(moonData.angle) * moonData.dist;
+        moonData.mesh.position.z = Math.sin(moonData.angle) * moonData.dist;
+      });
+
+      // Update label positions
+      labelElements.forEach(labelData => {
+        const pos = new THREE.Vector3();
+        labelData.planet.getWorldPosition(pos);
+        pos.y += labelData.planet.geometry.parameters.radius + 0.8;
+        pos.project(camera);
+
+        const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (pos.y * -0.5 + 0.5) * window.innerHeight;
+
+        labelData.div.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
+        labelData.div.style.opacity = pos.z < 1 ? '1' : '0';
       });
 
       // Rotate starfield
@@ -278,6 +367,11 @@ const NASASolarSystem: React.FC = () => {
       window.removeEventListener('click', onMouseClick);
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationId);
+      
+      // Remove labels
+      if (container.contains(labelsContainer)) {
+        container.removeChild(labelsContainer);
+      }
       
       // Dispose
       scene.traverse((object) => {

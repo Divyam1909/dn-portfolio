@@ -65,29 +65,23 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
   if (variant === 'universe') {
     return (
       <Fade in={true} timeout={1000}>
-        <motion.div
-          key={key}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          style={{ 
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
+        <Box sx={{ 
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          px: { xs: 2, sm: 4, md: 6 }
+        }}>
           <Box sx={{ 
             position: 'relative', 
             textAlign: 'center',
-            maxWidth: '100%',
-            px: { xs: 2, sm: 4, md: 6 },
+            maxWidth: '900px',
+            width: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center'
           }}>
-            {/* Flowing Quote Text */}
+            {/* Static Quote Text */}
             <Typography
               variant="h5"
               sx={{
@@ -95,39 +89,30 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
                 fontStyle: 'italic',
                 fontWeight: 300,
                 lineHeight: 1.7,
-                mb: 2,
+                mb: 1.5,
                 textShadow: `
                   0 0 20px rgba(147, 197, 253, 0.4),
                   0 0 40px rgba(147, 197, 253, 0.2),
                   0 2px 4px rgba(0, 0, 0, 0.8)
                 `,
-                fontSize: { xs: '1rem', sm: '1.2rem', md: '1.4rem' },
+                fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.3rem' },
                 letterSpacing: '0.5px',
-                maxWidth: '800px',
+                maxWidth: '100%',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
-                animation: 'float 6s ease-in-out infinite',
-                '@keyframes float': {
-                  '0%, 100%': {
-                    transform: 'translateY(0px)',
-                  },
-                  '50%': {
-                    transform: 'translateY(-5px)',
-                  },
-                },
               }}
             >
               "{quote.text}"
             </Typography>
             
-            {/* Author - Flowing Style */}
+            {/* Author */}
             {quote.author && (
               <Typography
                 variant="body1"
                 sx={{
                   color: 'rgba(147, 197, 253, 0.85)',
                   fontWeight: 400,
-                  fontSize: { xs: '0.95rem', sm: '1.1rem' },
+                  fontSize: { xs: '0.85rem', sm: '1rem' },
                   textShadow: `
                     0 0 15px rgba(147, 197, 253, 0.5),
                     0 2px 4px rgba(0, 0, 0, 0.6)
@@ -138,25 +123,8 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
                 — {quote.author}
               </Typography>
             )}
-            
-            {/* Refresh Button - Subtle */}
-            <IconButton
-              onClick={handleRefresh}
-              size="small"
-              sx={{
-                mt: 2,
-                color: 'rgba(147, 197, 253, 0.4)',
-                '&:hover': {
-                  color: 'rgba(147, 197, 253, 0.9)',
-                  transform: 'rotate(180deg)',
-                  transition: 'all 0.5s ease'
-                }
-              }}
-            >
-              <RefreshIcon fontSize="small" />
-            </IconButton>
           </Box>
-        </motion.div>
+        </Box>
       </Fade>
     );
   }

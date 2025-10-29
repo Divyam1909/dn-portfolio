@@ -25,6 +25,7 @@ const UniverseView: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showInfo, setShowInfo] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const [legendCollapsed, setLegendCollapsed] = useState(false);
 
   // Hide hint after 5 seconds
   useEffect(() => {
@@ -247,41 +248,43 @@ const UniverseView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Initial Hint */}
+      {/* Initial Hint - Bottom Right */}
       <AnimatePresence>
         {showHint && !showInfo && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5 }}
           >
             <Typography
               sx={{
                 position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                color: '#93C5FD',
-                fontSize: { xs: '1rem', sm: '1.2rem' },
-                fontWeight: 600,
-                textAlign: 'center',
-                textShadow: '0 0 20px rgba(147, 197, 253, 0.8)',
-                bgcolor: 'rgba(10, 10, 30, 0.6)',
+                bottom: { xs: 80, sm: 90 },
+                right: { xs: 20, sm: 30 },
+                color: '#FFD60A',
+                fontSize: { xs: '0.85rem', sm: '1rem' },
+                fontWeight: 700,
+                fontFamily: '"Orbitron", monospace',
+                textAlign: 'right',
+                textShadow: '0 0 20px rgba(255, 214, 10, 0.8)',
+                bgcolor: 'rgba(11, 61, 145, 0.85)',
                 backdropFilter: 'blur(10px)',
-                px: 4,
-                py: 2,
+                px: 3,
+                py: 1.5,
                 borderRadius: 2,
-                display: showInfo ? 'none' : 'block',
+                border: '1px solid rgba(255, 214, 10, 0.5)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
               }}
             >
-              👆 Click any planet to explore
+              🎯 Click any planet to explore
             </Typography>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* NASA-Style Legend - Bottom Left Corner */}
+      {/* NASA-Style Legend - Bottom Left Corner - Collapsible */}
       <AnimatePresence>
         {!showInfo && (
           <motion.div
@@ -301,25 +304,53 @@ const UniverseView: React.FC = () => {
                 backdropFilter: 'blur(15px)',
                 border: '1px solid rgba(255, 214, 10, 0.3)',
                 borderRadius: 3,
-                p: 2.5,
                 maxWidth: { xs: '200px', sm: '300px' },
-                display: { xs: 'none', sm: 'block' }
+                display: { xs: 'none', sm: 'block' },
+                overflow: 'hidden',
+                transition: 'all 0.3s ease'
               }}
             >
-              <Typography
-                variant="subtitle2"
+              <Box
+                onClick={() => setLegendCollapsed(!legendCollapsed)}
                 sx={{
-                  color: '#FFD60A',
-                  fontFamily: '"Orbitron", monospace',
-                  fontWeight: 700,
-                  mb: 1.5,
-                  fontSize: '0.85rem',
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase'
+                  p: 1.5,
+                  cursor: 'pointer',
+                  background: 'rgba(255, 214, 10, 0.1)',
+                  borderBottom: legendCollapsed ? 'none' : '1px solid rgba(255, 214, 10, 0.2)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  '&:hover': {
+                    background: 'rgba(255, 214, 10, 0.2)',
+                  }
                 }}
               >
-                🪐 Solar Navigation
-              </Typography>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    color: '#FFD60A',
+                    fontFamily: '"Orbitron", monospace',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    m: 0
+                  }}
+                >
+                  🪐 Solar Navigation
+                </Typography>
+                <Typography sx={{ color: '#FFD60A', fontSize: '1.2rem', fontWeight: 700 }}>
+                  {legendCollapsed ? '▼' : '▲'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ 
+                maxHeight: legendCollapsed ? 0 : '500px',
+                opacity: legendCollapsed ? 0 : 1,
+                transition: 'all 0.3s ease',
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ p: 2.5 }}>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.7 }}>
                 {[
@@ -384,16 +415,18 @@ const UniverseView: React.FC = () => {
                 ))}
               </Box>
 
-              <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid rgba(255, 214, 10, 0.2)' }}>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
-                  🖱️ Drag to orbit
-                </Typography>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
-                  🔍 Scroll to zoom
-                </Typography>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', fontFamily: '"Titillium Web", sans-serif' }}>
-                  🎯 Click planet to navigate
-                </Typography>
+                  <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid rgba(255, 214, 10, 0.2)' }}>
+                    <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
+                      🖱️ Drag to orbit
+                    </Typography>
+                    <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
+                      🔍 Scroll to zoom
+                    </Typography>
+                    <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', fontFamily: '"Titillium Web", sans-serif' }}>
+                      🎯 Click planet to navigate
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
             </Paper>
           </motion.div>
