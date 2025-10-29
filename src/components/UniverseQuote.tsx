@@ -7,25 +7,35 @@ import { portfolioAPI } from '../services/api';
 interface UniverseQuoteProps {
   category?: string;
   variant?: 'default' | 'universe';
+  cameraDistance?: number;
 }
 
 const UniverseQuote: React.FC<UniverseQuoteProps> = ({ 
   category = 'universe', 
-  variant = 'universe' 
+  variant = 'universe',
+  cameraDistance = 45
 }) => {
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // Hardcoded fallback quotes
+  // Hardcoded fallback quotes - Tech + Space themed
   const fallbackQuotes = [
     {
-      text: "The cosmos is within us. We are made of star-stuff. We are a way for the universe to know itself.",
-      author: "Carl Sagan"
+      text: "Any sufficiently advanced technology is indistinguishable from magic. Our code explores the cosmos, bridging silicon and stardust.",
+      author: "Inspired by Arthur C. Clarke"
     },
     {
-      text: "Two possibilities exist: either we are alone in the Universe or we are not. Both are equally terrifying.",
-      author: "Arthur C. Clarke"
+      text: "We are the architects of tomorrow's universe, writing algorithms that reach beyond the stars, turning cosmic dreams into digital reality.",
+      author: "Modern Tech Philosophy"
+    },
+    {
+      text: "In the vast expanse of space and data, we find infinite possibilities. Every line of code is a step toward understanding the universe.",
+      author: "Tech & Space Vision"
+    },
+    {
+      text: "From quantum computing to interstellar travel, technology is our spacecraft, and innovation is the fuel that propels humanity forward.",
+      author: "Digital Space Age"
     }
   ];
 
@@ -63,56 +73,105 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
   }
 
   if (variant === 'universe') {
+    // Calculate visibility based on camera distance
+    // Show quote when distance > 30, hide when distance < 30
+    const isVisible = cameraDistance > 30;
+    const shouldScatter = cameraDistance <= 30;
+    
+    // Split quote into words for scatter effect
+    const words = quote.text.split(' ');
+    
     return (
-      <Fade in={true} timeout={1000}>
+      <Box sx={{ 
+        position: 'absolute',
+        top: '100px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        px: { xs: 2, sm: 4, md: 6 }
+      }}>
         <Box sx={{ 
+          textAlign: 'center',
+          maxWidth: '1100px',
           width: '100%',
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
           alignItems: 'center',
-          px: { xs: 2, sm: 4, md: 6 }
+          justifyContent: 'center'
         }}>
+          {/* Animated Quote Text with Scatter Effect */}
           <Box sx={{ 
-            position: 'static', 
-            textAlign: 'center',
-            maxWidth: '1100px',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            justifyContent: 'center', 
+            gap: '0.4rem',
+            mb: 1.5
           }}>
-            {/* Static Quote Text */}
-            <Typography
-              variant="h5"
-              sx={{
-                color: 'rgba(224, 231, 255, 0.95)',
-                fontStyle: 'italic',
-                fontWeight: 300,
-                lineHeight: 1.7,
-                mb: 1.5,
-                textShadow: `
-                  0 0 20px rgba(147, 197, 253, 0.4),
-                  0 0 40px rgba(147, 197, 253, 0.2),
-                  0 2px 4px rgba(0, 0, 0, 0.8)
-                `,
-                fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.3rem' },
-                letterSpacing: '0.5px',
-                maxWidth: '100%',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
+            {words.map((word: string, index: number) => (
+              <motion.span
+                key={`${key}-${index}`}
+                initial={{ opacity: 0, y: -20 }}
+                animate={
+                  isVisible
+                    ? { 
+                        opacity: 1, 
+                        y: 0, 
+                        x: 0,
+                        scale: 1,
+                        rotate: 0
+                      }
+                    : { 
+                        opacity: 0, 
+                        y: Math.random() * 100 - 50,
+                        x: Math.random() * 200 - 100,
+                        scale: 0.5,
+                        rotate: Math.random() * 360 - 180
+                      }
+                }
+                transition={{ 
+                  duration: 0.6, 
+                  delay: isVisible ? index * 0.05 : 0,
+                  ease: shouldScatter ? "easeOut" : "easeInOut"
+                }}
+                style={{
+                  color: 'rgba(224, 231, 255, 0.95)',
+                  fontStyle: 'italic',
+                  fontWeight: 300,
+                  fontSize: 'clamp(0.95rem, 2vw, 1.3rem)',
+                  letterSpacing: '0.5px',
+                  textShadow: `
+                    0 0 20px rgba(147, 197, 253, 0.4),
+                    0 0 40px rgba(147, 197, 253, 0.2),
+                    0 2px 4px rgba(0, 0, 0, 0.8)
+                  `,
+                  display: 'inline-block',
+                }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </Box>
+          
+          {/* Author with Fade Effect */}
+          {quote.author && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: isVisible ? 0.85 : 0,
+                y: isVisible ? 0 : 20
               }}
+              transition={{ duration: 0.5 }}
             >
-              "{quote.text}"
-            </Typography>
-            
-            {/* Author */}
-            {quote.author && (
               <Typography
                 variant="body1"
                 sx={{
                   color: 'rgba(147, 197, 253, 0.85)',
                   fontWeight: 400,
                   fontSize: { xs: '0.85rem', sm: '1rem' },
+                  textAlign: 'center',
                   textShadow: `
                     0 0 15px rgba(147, 197, 253, 0.5),
                     0 2px 4px rgba(0, 0, 0, 0.6)
@@ -122,10 +181,10 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
               >
                 — {quote.author}
               </Typography>
-            )}
-          </Box>
+            </motion.div>
+          )}
         </Box>
-      </Fade>
+      </Box>
     );
   }
 

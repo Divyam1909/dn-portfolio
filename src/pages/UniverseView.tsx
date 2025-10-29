@@ -27,6 +27,7 @@ const UniverseView: React.FC = () => {
   const [legendCollapsed, setLegendCollapsed] = useState(true);
   const [creditsExpanded, setCreditsExpanded] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
+  const [cameraDistance, setCameraDistance] = useState(45);
 
   // Hide hint after 5 seconds
   useEffect(() => {
@@ -40,10 +41,14 @@ const UniverseView: React.FC = () => {
     setResetTrigger(prev => prev + 1);
   };
 
+  const handleCameraDistanceChange = (distance: number) => {
+    setCameraDistance(distance);
+  };
+
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#000' }}>
       {/* NASA Solar System Scene */}
-      <NASASolarSystem resetTrigger={resetTrigger} />
+      <NASASolarSystem resetTrigger={resetTrigger} onCameraDistanceChange={handleCameraDistanceChange} />
 
       {/* Top Bar with glass morphism */}
       <Box
@@ -286,27 +291,22 @@ const UniverseView: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Quote Section - Top Center with Flowing Text */}
+      {/* Quote Section - Centered */}
       <AnimatePresence>
         {!showInfo && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            style={{
+          <Box
+            sx={{
               position: 'absolute',
-              top: 100,
-              left: '50%',
-              transform: 'translateX(-50%)',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               zIndex: 500,
-              width: isMobile ? '95%' : '90%',
-              maxWidth: '1000px',
-              textAlign: 'center',
+              pointerEvents: 'none',
             }}
           >
-            <UniverseQuote category="universe" variant="universe" />
-          </motion.div>
+            <UniverseQuote category="universe" variant="universe" cameraDistance={cameraDistance} />
+          </Box>
         )}
       </AnimatePresence>
 

@@ -19,12 +19,15 @@ interface Planet {
 
 interface NASASolarSystemProps {
   resetTrigger?: number;
+  onCameraDistanceChange?: (distance: number) => void;
 }
 
-const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) => {
+const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onCameraDistanceChange }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const cleanupRef = useRef<(() => void) | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -44,6 +47,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) =
       1000
     );
     camera.position.set(0, 20, 40);
+    cameraRef.current = camera;
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -62,8 +66,9 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) =
     controls.dampingFactor = 0.08;
     controls.rotateSpeed = 0.3;
     controls.zoomSpeed = 0.8;
-
     controls.panSpeed = 0.5;
+    controls.target.set(0, 0, 0);
+    controlsRef.current = controls;
 
     // Texture Loader
     const loader = new THREE.TextureLoader();
@@ -362,6 +367,12 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) =
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
+      // Calculate and send camera distance to parent
+      if (onCameraDistanceChange && camera) {
+        const distance = camera.position.length();
+        onCameraDistanceChange(distance);
+      }
+
       // Rotate planets and orbits
       planets.forEach(planet => {
         planet.orbitGroup.rotation.y += planet.orbitSpeed * speed;
@@ -490,18 +501,38 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) =
     };
   }, [navigate]);
 
-  // Handle reset trigger
+  // Handle reset trigger - only reset camera position
   useEffect(() => {
-    if (resetTrigger > 0 && cleanupRef.current) {
-      // Trigger reset by re-initializing the scene
-      const container = containerRef.current;
-      if (container) {
-        // Clear and reinitialize
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
+    if (resetTrigger > 0 && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      
+      // Smoothly animate camera back to default position
+      const startPos = camera.position.clone();
+      const targetPos = new THREE.Vector3(0, 20, 40);
+      const startTarget = controls.target.clone();
+      const targetCenter = new THREE.Vector3(0, 0, 0);
+      
+      const duration = 1000;
+      const startTime = Date.now();
+      
+      const animateReset = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        camera.position.lerpVectors(startPos, targetPos, eased);
+        controls.target.lerpVectors(startTarget, targetCenter, eased);
+        controls.update();
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateReset);
         }
-        // The main useEffect will reinitialize automatically
-      }
+      };
+      
+      animateReset();
     }
   }, [resetTrigger]);
 
