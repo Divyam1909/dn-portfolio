@@ -455,7 +455,6 @@ const NASASolarSystem: React.FC = () => {
 
           if (progress < 1) {
             const currentPos = star.startPos.clone().lerp(star.endPos, progress);
-            const trailLength = 5;
             const trailStart = currentPos.clone();
             const trailEnd = star.startPos.clone().lerp(star.endPos, Math.max(0, progress - 0.1));
             
