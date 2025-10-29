@@ -16,9 +16,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import UltimateSolarSystem from '../components/SolarSystem/UltimateSolarSystem';
+import NASASolarSystem from '../components/SolarSystem/NASASolarSystem';
 import UniverseQuote from '../components/UniverseQuote';
-import AudioManager from '../components/SolarSystem/AudioManager';
 
 const UniverseView: React.FC = () => {
   const navigate = useNavigate();
@@ -37,11 +36,8 @@ const UniverseView: React.FC = () => {
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#000' }}>
-      {/* Ultimate Solar System Scene */}
-      <UltimateSolarSystem />
-
-      {/* Audio Manager */}
-      <AudioManager />
+      {/* NASA Solar System Scene */}
+      <NASASolarSystem />
 
       {/* Top Bar with glass morphism */}
       <Box
