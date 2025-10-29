@@ -25,7 +25,8 @@ const UniverseView: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showInfo, setShowInfo] = useState(false);
   const [showHint, setShowHint] = useState(true);
-  const [legendCollapsed, setLegendCollapsed] = useState(false);
+  const [legendCollapsed, setLegendCollapsed] = useState(true);
+  const [creditsExpanded, setCreditsExpanded] = useState(false);
 
   // Hide hint after 5 seconds
   useEffect(() => {
@@ -166,13 +167,38 @@ const UniverseView: React.FC = () => {
               <Typography
                 variant="h5"
                 sx={{
-                  color: '#E0E7FF',
+                  color: '#FFD60A',
                   fontWeight: 700,
-                  mb: 3,
+                  mb: 2,
+                  textAlign: 'center',
+                  fontFamily: '"Orbitron", monospace',
+                }}
+              >
+                🌌 Welcome
+              </Typography>
+
+              <Typography
+                variant="h6"
+                sx={{
+                  color: '#E0E7FF',
+                  mb: 1,
+                  fontWeight: 600,
                   textAlign: 'center',
                 }}
               >
-                Navigate the Solar System
+                Welcome to Divyam's Portfolio Universe! 🚀
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#C7D2FE',
+                  mb: 3,
+                  textAlign: 'center',
+                  lineHeight: 1.6,
+                }}
+              >
+                Embark on an interstellar journey through my professional universe! Each planet represents a unique aspect of my career.
               </Typography>
 
               <Box sx={{ mb: 3 }}>
@@ -242,6 +268,80 @@ const UniverseView: React.FC = () => {
                 <Typography sx={{ color: '#C7D2FE' }}>
                   🔄 <strong>Auto-rotate:</strong> Enabled by default
                 </Typography>
+              </Box>
+
+              {/* Credits Section - Collapsible */}
+              <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(147, 197, 253, 0.2)' }}>
+                <Box
+                  onClick={() => setCreditsExpanded(!creditsExpanded)}
+                  sx={{
+                    p: 1.5,
+                    cursor: 'pointer',
+                    background: 'rgba(147, 197, 253, 0.05)',
+                    borderRadius: 2,
+                    border: '1px solid rgba(147, 197, 253, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    '&:hover': {
+                      background: 'rgba(147, 197, 253, 0.1)',
+                    }
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: '#93C5FD',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    ℹ️ Credits & Acknowledgements
+                  </Typography>
+                  <Typography sx={{ color: '#93C5FD', fontSize: '1.2rem' }}>
+                    {creditsExpanded ? '▲' : '▼'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{
+                  maxHeight: creditsExpanded ? '300px' : '0',
+                  opacity: creditsExpanded ? 1 : 0,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                }}>
+                  <Box sx={{ p: 2, pt: 1.5 }}>
+                    <Typography
+                      sx={{
+                        color: '#C7D2FE',
+                        fontSize: '0.8rem',
+                        mb: 1.5,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      This interactive solar system portfolio was built with:
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ color: '#FFD60A', fontSize: '1rem' }}>🚀</Typography>
+                        <Typography sx={{ color: '#E0E7FF', fontSize: '0.8rem' }}>
+                          <strong>NASA</strong> - Planetary textures & inspiration
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ color: '#FFD60A', fontSize: '1rem' }}>💻</Typography>
+                        <Typography sx={{ color: '#E0E7FF', fontSize: '0.8rem' }}>
+                          <strong>Cursor (Vibe Coding)</strong> - AI-powered development
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ color: '#FFD60A', fontSize: '1rem' }}>🌐</Typography>
+                        <Typography sx={{ color: '#E0E7FF', fontSize: '0.8rem' }}>
+                          <strong>GitHub Codebase</strong> - Open-source solar system resources
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
               </Box>
             </Paper>
           </motion.div>

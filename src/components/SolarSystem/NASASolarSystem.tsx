@@ -100,6 +100,71 @@ const NASASolarSystem: React.FC = () => {
     lensflare.addElement(new LensflareElement(textureFlare2, 128, 0.2, new THREE.Color(1, 1, 0.6)));
     sun.add(lensflare);
 
+    // Add shooting stars
+    const shootingStars: any[] = [];
+    for (let i = 0; i < 5; i++) {
+      const starGeometry = new THREE.BufferGeometry();
+      const starMaterial = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0
+      });
+      const star = new THREE.Line(starGeometry, starMaterial);
+      scene.add(star);
+      shootingStars.push({
+        mesh: star,
+        active: false,
+        startTime: 0,
+        startPos: new THREE.Vector3(),
+        endPos: new THREE.Vector3()
+      });
+    }
+
+    // Add comets
+    const comets: any[] = [];
+    for (let i = 0; i < 3; i++) {
+      const cometGroup = new THREE.Group();
+      
+      // Comet nucleus
+      const cometGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+      const cometMaterial = new THREE.MeshStandardMaterial({
+        color: 0xaaccff,
+        emissive: 0x4488ff,
+        emissiveIntensity: 0.5,
+      });
+      const cometMesh = new THREE.Mesh(cometGeometry, cometMaterial);
+      cometGroup.add(cometMesh);
+
+      // Comet tail
+      const tailGeometry = new THREE.ConeGeometry(0.2, 4, 8);
+      const tailMaterial = new THREE.MeshBasicMaterial({
+        color: 0x88ccff,
+        transparent: true,
+        opacity: 0.6
+      });
+      const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+      tail.rotation.x = Math.PI / 2;
+      tail.position.z = -2;
+      cometGroup.add(tail);
+
+      // Position comet in elliptical orbit
+      const angle = (i / 3) * Math.PI * 2;
+      const radius = 50 + i * 10;
+      cometGroup.position.set(
+        Math.cos(angle) * radius,
+        (Math.random() - 0.5) * 20,
+        Math.sin(angle) * radius
+      );
+
+      scene.add(cometGroup);
+      comets.push({
+        group: cometGroup,
+        angle: angle,
+        radius: radius,
+        speed: 0.0001 + Math.random() * 0.0002
+      });
+    }
+
     // Planets with portfolio routes
     const planetsData = [
       { name: 'Mercury', label: 'About', size: 0.5, dist: 8, speed: 0.0041, texture: 'mercury.jpg', route: '/about', initialAngle: 2.1, moons: [] },
@@ -138,17 +203,17 @@ const NASASolarSystem: React.FC = () => {
       // Add rings for Saturn
       if (data.hasRings) {
         const ringTexture = loader.load('/textures/saturn_ring.png');
-        ringTexture.rotation = Math.PI / 2;
-        const ringGeometry = new THREE.RingGeometry(data.size * 1.4, data.size * 2.3, 64);
+        const ringGeometry = new THREE.RingGeometry(data.size * 1.5, data.size * 2.5, 128);
         const ringMaterial = new THREE.MeshStandardMaterial({
           map: ringTexture,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.7,
-          roughness: 0.8,
+          opacity: 0.8,
+          roughness: 0.6,
+          metalness: 0.1,
         });
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = -Math.PI / 2.5;
+        ring.rotation.x = Math.PI / 2 - 0.3; // Slight tilt for realism
         planetMesh.add(ring);
       }
 
@@ -177,7 +242,7 @@ const NASASolarSystem: React.FC = () => {
         planetMesh.add(moonGroup);
       }
 
-      // Create text label (will be positioned in DOM)
+        // Create text label (will be positioned in DOM)
       planetLabels.push({
         planet: planetMesh,
         label: data.label,
@@ -291,6 +356,27 @@ const NASASolarSystem: React.FC = () => {
     container.appendChild(labelsContainer);
 
     const labelElements: any[] = [];
+    
+    // Sun label
+    const sunLabelDiv = document.createElement('div');
+    sunLabelDiv.textContent = "Divyam's Portfolio";
+    sunLabelDiv.style.position = 'absolute';
+    sunLabelDiv.style.color = '#FFD60A';
+    sunLabelDiv.style.fontFamily = '"Orbitron", monospace';
+    sunLabelDiv.style.fontSize = '16px';
+    sunLabelDiv.style.fontWeight = '900';
+    sunLabelDiv.style.textTransform = 'uppercase';
+    sunLabelDiv.style.letterSpacing = '2px';
+    sunLabelDiv.style.padding = '6px 12px';
+    sunLabelDiv.style.background = 'rgba(252, 61, 33, 0.9)';
+    sunLabelDiv.style.borderRadius = '6px';
+    sunLabelDiv.style.border = '2px solid rgba(255, 214, 10, 0.8)';
+    sunLabelDiv.style.backdropFilter = 'blur(10px)';
+    sunLabelDiv.style.whiteSpace = 'nowrap';
+    sunLabelDiv.style.boxShadow = '0 0 20px rgba(255, 214, 10, 0.6)';
+    labelsContainer.appendChild(sunLabelDiv);
+    labelElements.push({ div: sunLabelDiv, planet: sun });
+
     planetLabels.forEach(labelData => {
       const labelDiv = document.createElement('div');
       labelDiv.textContent = labelData.label;
@@ -329,11 +415,66 @@ const NASASolarSystem: React.FC = () => {
         moonData.mesh.position.z = Math.sin(moonData.angle) * moonData.dist;
       });
 
+      // Animate comets
+      comets.forEach(cometData => {
+        cometData.angle += cometData.speed;
+        cometData.group.position.x = Math.cos(cometData.angle) * cometData.radius;
+        cometData.group.position.z = Math.sin(cometData.angle) * cometData.radius;
+        cometData.group.lookAt(0, 0, 0);
+      });
+
+      // Shooting stars animation
+      const currentTime = Date.now();
+      shootingStars.forEach(star => {
+        if (!star.active && Math.random() < 0.001) {
+          // Start new shooting star
+          star.active = true;
+          star.startTime = currentTime;
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 60 + Math.random() * 40;
+          star.startPos.set(
+            Math.cos(angle) * distance,
+            20 + Math.random() * 30,
+            Math.sin(angle) * distance
+          );
+          star.endPos.set(
+            star.startPos.x - 30,
+            star.startPos.y - 20,
+            star.startPos.z - 30
+          );
+          
+          const points = [star.startPos.clone(), star.startPos.clone()];
+          star.mesh.geometry.setFromPoints(points);
+          star.mesh.material.opacity = 1;
+        }
+
+        if (star.active) {
+          const elapsed = currentTime - star.startTime;
+          const duration = 1000;
+          const progress = Math.min(elapsed / duration, 1);
+
+          if (progress < 1) {
+            const currentPos = star.startPos.clone().lerp(star.endPos, progress);
+            const trailLength = 5;
+            const trailStart = currentPos.clone();
+            const trailEnd = star.startPos.clone().lerp(star.endPos, Math.max(0, progress - 0.1));
+            
+            const points = [trailStart, trailEnd];
+            star.mesh.geometry.setFromPoints(points);
+            star.mesh.material.opacity = 1 - progress;
+          } else {
+            star.active = false;
+            star.mesh.material.opacity = 0;
+          }
+        }
+      });
+
       // Update label positions
       labelElements.forEach(labelData => {
         const pos = new THREE.Vector3();
         labelData.planet.getWorldPosition(pos);
-        pos.y += labelData.planet.geometry.parameters.radius + 0.8;
+        const radius = labelData.planet.geometry?.parameters?.radius || 5;
+        pos.y += radius + 0.8;
         pos.project(camera);
 
         const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
