@@ -63,16 +63,6 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) =
     controls.rotateSpeed = 0.3;
     controls.zoomSpeed = 0.8;
 
-    // Store initial camera position for reset
-    const initialCameraPosition = new THREE.Vector3(0, 20, 40);
-    const initialControlsTarget = new THREE.Vector3(0, 0, 0);
-
-    // Reset function
-    const resetView = () => {
-      camera.position.copy(initialCameraPosition);
-      controls.target.copy(initialControlsTarget);
-      controls.update();
-    };
     controls.panSpeed = 0.5;
 
     // Texture Loader

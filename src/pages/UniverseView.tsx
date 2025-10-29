@@ -10,7 +10,6 @@ import {
   Container,
 } from '@mui/material';
 import {
-  Close as CloseIcon,
   Home as HomeIcon,
   Info as InfoIcon,
 } from '@mui/icons-material';
