@@ -281,7 +281,7 @@ const UniverseView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Legend - Bottom Left Corner */}
+      {/* NASA-Style Legend - Bottom Left Corner */}
       <AnimatePresence>
         {!showInfo && (
           <motion.div
@@ -297,62 +297,85 @@ const UniverseView: React.FC = () => {
                 bottom: 20,
                 left: 20,
                 zIndex: 1000,
-                background: 'linear-gradient(135deg, rgba(18, 18, 62, 0.95) 0%, rgba(30, 30, 90, 0.92) 100%)',
+                background: 'linear-gradient(135deg, rgba(11, 61, 145, 0.85) 0%, rgba(0, 29, 61, 0.85) 100%)',
                 backdropFilter: 'blur(15px)',
-                border: '1px solid rgba(147, 197, 253, 0.2)',
+                border: '1px solid rgba(255, 214, 10, 0.3)',
                 borderRadius: 3,
                 p: 2.5,
-                maxWidth: { xs: '200px', sm: '280px' },
+                maxWidth: { xs: '200px', sm: '300px' },
                 display: { xs: 'none', sm: 'block' }
               }}
             >
               <Typography
                 variant="subtitle2"
                 sx={{
-                  color: '#93C5FD',
+                  color: '#FFD60A',
+                  fontFamily: '"Orbitron", monospace',
                   fontWeight: 700,
                   mb: 1.5,
-                  fontSize: '0.9rem',
-                  letterSpacing: '0.5px'
+                  fontSize: '0.85rem',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase'
                 }}
               >
-                🌍 Planet Guide
+                🪐 Solar Navigation
               </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.7 }}>
                 {[
-                  { planet: 'Mercury', color: '#8C7853', section: 'About' },
-                  { planet: 'Venus', color: '#FFC649', section: 'Resume' },
-                  { planet: 'Earth', color: '#4A90E2', section: 'Projects' },
-                  { planet: 'Mars', color: '#E27B58', section: 'Experience' },
-                  { planet: 'Jupiter', color: '#C8956A', section: 'Education' },
-                  { planet: 'Saturn', color: '#FAD5A5', section: 'Skills' },
-                  { planet: 'Uranus', color: '#4FD0E7', section: 'Certifications' },
-                  { planet: 'Neptune', color: '#4169E1', section: 'Contact' },
+                  { planet: 'Mercury', section: 'About', color: '#B59563' },
+                  { planet: 'Venus', section: 'Resume', color: '#FFC649' },
+                  { planet: 'Earth', section: 'Projects', color: '#6B9BD1' },
+                  { planet: 'Mars', section: 'Experience', color: '#CD5C5C' },
+                  { planet: 'Jupiter', section: 'Education', color: '#C88B5A' },
+                  { planet: 'Saturn', section: 'Skills', color: '#FAD5A5' },
+                  { planet: 'Uranus', section: 'Certifications', color: '#4FD0E7' },
+                  { planet: 'Neptune', section: 'Contact', color: '#4169E1' },
                 ].map((item, index) => (
                   <Box
                     key={index}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'space-between',
                       gap: 1,
+                      p: 0.8,
+                      borderRadius: 1,
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        background: 'rgba(255, 214, 10, 0.1)',
+                        transform: 'translateX(5px)',
+                      }
                     }}
                   >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        bgcolor: item.color,
-                        flexShrink: 0,
-                        boxShadow: `0 0 8px ${item.color}`,
-                      }}
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: item.color,
+                          flexShrink: 0,
+                          boxShadow: `0 0 10px ${item.color}`,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: '#E0E7FF',
+                          fontSize: '0.7rem',
+                          fontWeight: 500,
+                          fontFamily: '"Titillium Web", sans-serif',
+                        }}
+                      >
+                        {item.planet}
+                      </Typography>
+                    </Box>
                     <Typography
                       sx={{
-                        color: '#E0E7FF',
-                        fontSize: '0.75rem',
-                        fontWeight: 500,
+                        color: '#93C5FD',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
                       }}
                     >
                       {item.section}
@@ -361,15 +384,15 @@ const UniverseView: React.FC = () => {
                 ))}
               </Box>
 
-              <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid rgba(147, 197, 253, 0.15)' }}>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.7rem', mb: 0.5 }}>
-                  🖱️ Drag to rotate
+              <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid rgba(255, 214, 10, 0.2)' }}>
+                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
+                  🖱️ Drag to orbit
                 </Typography>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.7rem', mb: 0.5 }}>
+                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
                   🔍 Scroll to zoom
                 </Typography>
-                <Typography sx={{ color: '#C7D2FE', fontSize: '0.7rem' }}>
-                  🎯 Click to navigate
+                <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', fontFamily: '"Titillium Web", sans-serif' }}>
+                  🎯 Click planet to navigate
                 </Typography>
               </Box>
             </Paper>
