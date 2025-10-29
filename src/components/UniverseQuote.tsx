@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, IconButton, Fade } from '@mui/material';
+import { Box, Typography, IconButton, Fade } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { portfolioAPI } from '../services/api';

@@ -351,8 +351,7 @@ const UniverseView: React.FC = () => {
                 overflow: 'hidden'
               }}>
                 <Box sx={{ p: 2.5 }}>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.7 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.7 }}>
                 {[
                   { planet: 'Mercury', section: 'About', color: '#B59563' },
                   { planet: 'Venus', section: 'Resume', color: '#FFC649' },
@@ -413,7 +412,7 @@ const UniverseView: React.FC = () => {
                     </Typography>
                   </Box>
                 ))}
-              </Box>
+                  </Box>
 
                   <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid rgba(255, 214, 10, 0.2)' }}>
                     <Typography sx={{ color: '#C7D2FE', fontSize: '0.65rem', mb: 0.4, fontFamily: '"Titillium Web", sans-serif' }}>
