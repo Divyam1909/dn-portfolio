@@ -73,7 +73,7 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
           px: { xs: 2, sm: 4, md: 6 }
         }}>
           <Box sx={{ 
-            position: 'relative', 
+            position: 'static', 
             textAlign: 'center',
             maxWidth: '900px',
             width: '100%',

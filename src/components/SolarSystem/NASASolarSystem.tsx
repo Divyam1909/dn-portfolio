@@ -17,7 +17,11 @@ interface Planet {
   route: string;
 }
 
-const NASASolarSystem: React.FC = () => {
+interface NASASolarSystemProps {
+  resetTrigger?: number;
+}
+
+const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -58,6 +62,17 @@ const NASASolarSystem: React.FC = () => {
     controls.dampingFactor = 0.08;
     controls.rotateSpeed = 0.3;
     controls.zoomSpeed = 0.8;
+
+    // Store initial camera position for reset
+    const initialCameraPosition = new THREE.Vector3(0, 20, 40);
+    const initialControlsTarget = new THREE.Vector3(0, 0, 0);
+
+    // Reset function
+    const resetView = () => {
+      camera.position.copy(initialCameraPosition);
+      controls.target.copy(initialControlsTarget);
+      controls.update();
+    };
     controls.panSpeed = 0.5;
 
     // Texture Loader
@@ -100,9 +115,9 @@ const NASASolarSystem: React.FC = () => {
     lensflare.addElement(new LensflareElement(textureFlare2, 128, 0.2, new THREE.Color(1, 1, 0.6)));
     sun.add(lensflare);
 
-    // Add shooting stars
+    // Add shooting stars (increased from 5 to 10)
     const shootingStars: any[] = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const starGeometry = new THREE.BufferGeometry();
       const starMaterial = new THREE.LineBasicMaterial({
         color: 0xffffff,
@@ -117,51 +132,6 @@ const NASASolarSystem: React.FC = () => {
         startTime: 0,
         startPos: new THREE.Vector3(),
         endPos: new THREE.Vector3()
-      });
-    }
-
-    // Add comets
-    const comets: any[] = [];
-    for (let i = 0; i < 3; i++) {
-      const cometGroup = new THREE.Group();
-      
-      // Comet nucleus
-      const cometGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-      const cometMaterial = new THREE.MeshStandardMaterial({
-        color: 0xaaccff,
-        emissive: 0x4488ff,
-        emissiveIntensity: 0.5,
-      });
-      const cometMesh = new THREE.Mesh(cometGeometry, cometMaterial);
-      cometGroup.add(cometMesh);
-
-      // Comet tail
-      const tailGeometry = new THREE.ConeGeometry(0.2, 4, 8);
-      const tailMaterial = new THREE.MeshBasicMaterial({
-        color: 0x88ccff,
-        transparent: true,
-        opacity: 0.6
-      });
-      const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-      tail.rotation.x = Math.PI / 2;
-      tail.position.z = -2;
-      cometGroup.add(tail);
-
-      // Position comet in elliptical orbit
-      const angle = (i / 3) * Math.PI * 2;
-      const radius = 50 + i * 10;
-      cometGroup.position.set(
-        Math.cos(angle) * radius,
-        (Math.random() - 0.5) * 20,
-        Math.sin(angle) * radius
-      );
-
-      scene.add(cometGroup);
-      comets.push({
-        group: cometGroup,
-        angle: angle,
-        radius: radius,
-        speed: 0.0001 + Math.random() * 0.0002
       });
     }
 
@@ -357,23 +327,23 @@ const NASASolarSystem: React.FC = () => {
 
     const labelElements: any[] = [];
     
-    // Sun label
+    // Sun label (decreased size)
     const sunLabelDiv = document.createElement('div');
     sunLabelDiv.textContent = "Divyam's Portfolio";
     sunLabelDiv.style.position = 'absolute';
     sunLabelDiv.style.color = '#FFD60A';
     sunLabelDiv.style.fontFamily = '"Orbitron", monospace';
-    sunLabelDiv.style.fontSize = '16px';
-    sunLabelDiv.style.fontWeight = '900';
+    sunLabelDiv.style.fontSize = '13px';
+    sunLabelDiv.style.fontWeight = '700';
     sunLabelDiv.style.textTransform = 'uppercase';
-    sunLabelDiv.style.letterSpacing = '2px';
-    sunLabelDiv.style.padding = '6px 12px';
-    sunLabelDiv.style.background = 'rgba(252, 61, 33, 0.9)';
-    sunLabelDiv.style.borderRadius = '6px';
-    sunLabelDiv.style.border = '2px solid rgba(255, 214, 10, 0.8)';
-    sunLabelDiv.style.backdropFilter = 'blur(10px)';
+    sunLabelDiv.style.letterSpacing = '1.5px';
+    sunLabelDiv.style.padding = '5px 10px';
+    sunLabelDiv.style.background = 'rgba(252, 61, 33, 0.85)';
+    sunLabelDiv.style.borderRadius = '5px';
+    sunLabelDiv.style.border = '1.5px solid rgba(255, 214, 10, 0.7)';
+    sunLabelDiv.style.backdropFilter = 'blur(8px)';
     sunLabelDiv.style.whiteSpace = 'nowrap';
-    sunLabelDiv.style.boxShadow = '0 0 20px rgba(255, 214, 10, 0.6)';
+    sunLabelDiv.style.boxShadow = '0 0 15px rgba(255, 214, 10, 0.5)';
     labelsContainer.appendChild(sunLabelDiv);
     labelElements.push({ div: sunLabelDiv, planet: sun });
 
@@ -413,14 +383,6 @@ const NASASolarSystem: React.FC = () => {
         moonData.angle += moonData.speed;
         moonData.mesh.position.x = Math.cos(moonData.angle) * moonData.dist;
         moonData.mesh.position.z = Math.sin(moonData.angle) * moonData.dist;
-      });
-
-      // Animate comets
-      comets.forEach(cometData => {
-        cometData.angle += cometData.speed;
-        cometData.group.position.x = Math.cos(cometData.angle) * cometData.radius;
-        cometData.group.position.z = Math.sin(cometData.angle) * cometData.radius;
-        cometData.group.lookAt(0, 0, 0);
       });
 
       // Shooting stars animation
@@ -537,6 +499,21 @@ const NASASolarSystem: React.FC = () => {
       }
     };
   }, [navigate]);
+
+  // Handle reset trigger
+  useEffect(() => {
+    if (resetTrigger > 0 && cleanupRef.current) {
+      // Trigger reset by re-initializing the scene
+      const container = containerRef.current;
+      if (container) {
+        // Clear and reinitialize
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+        // The main useEffect will reinitialize automatically
+      }
+    }
+  }, [resetTrigger]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100vh', overflow: 'hidden' }} />;
 };
