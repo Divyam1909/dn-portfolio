@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Box,
@@ -13,6 +13,7 @@ import {
   Button,
   Alert,
 } from '@mui/material';
+import { parseFlexibleDate, dateForSorting } from "../utils/date"; // Import dateForSorting
 import {
   Work as WorkIcon,
   School as SchoolIcon,
@@ -371,6 +372,7 @@ const Resume: React.FC = () => {
   const { data } = usePortfolioData();
   const { workExperience, education, skills } = data;
   const [certifications, setCertifications] = useState<any[]>([]);
+  const [orderDesc, setOrderDesc] = useState(true); // New state for sorting order
 
   // Fetch certifications
   useEffect(() => {
@@ -395,25 +397,68 @@ const Resume: React.FC = () => {
     }
   };
 
-  // Format work experience data to match Timeline component structure
-  const experienceData = Array.isArray(workExperience) ? workExperience.map((job: any) => ({
-    title: job.title || '',
-    organization: job.company || '',
-    date: `${job.startDate || ''} - ${job.endDate || ''}`,
-    location: job.location || '',
-    description: job.description || '',
-    highlights: job.achievements || [],
-  })) : [];
+  // Use the raw workExperience array for sorting, but map to Timeline items for display.
+  // This preserves ISO fields for accurate sorting.
+  const sortedExperience = useMemo(() => {
+    const raw = Array.isArray(workExperience) ? [...workExperience] : [];
 
-  // Format education data to match Timeline component structure
-  const educationData = Array.isArray(education) ? education.map((edu: any) => ({
-    title: edu.degree || '',
-    organization: edu.institution || '',
-    date: `${edu.startDate || ''} - ${edu.endDate || ''}`,
-    location: edu.location || '',
-    description: edu.description || '',
-    highlights: edu.description ? edu.description.split('. ').filter((s: string) => s.trim().length > 0) : [],
-  })) : [];
+    // Attach parsedDate for sorting (avoid modifying original object by shallow copy)
+    const stamped = raw.map(item => {
+      const parsed = dateForSorting(item); // uses ISO if available
+      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
+    });
+
+    // Sort by parsedDate (desc = newest first)
+    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
+
+    // Map to Timeline display shape
+    return stamped.map(({ item }) => ({
+      title: (item as any).title || '',
+      organization: (item as any).company || (item as any).organization || '',
+      date: ((item as any).startDate && (item as any).endDate)
+        ? `${(item as any).startDate} - ${(item as any).endDate}`
+        : ((item as any).startDateISO || (item as any).startDate
+            ? `${(item as any).startDate ?? (item as any).startDateISO}`
+            : ''),
+      location: (item as any).location || '',
+      description: (item as any).description || '',
+      highlights: (item as any).achievements || (item as any).highlights || [],
+      // Keep original for debugging or click actions if needed:
+      __meta: {
+        startDateISO: (item as any).startDateISO ?? (item as any).startDateISO,
+        endDateISO: (item as any).endDateISO ?? (item as any).endDateISO,
+        current: (item as any).current ?? false
+      }
+    }));
+  }, [workExperience, orderDesc]);
+
+
+  const sortedEducation = useMemo(() => {
+    const raw = Array.isArray(education) ? [...education] : [];
+  
+    const stamped = raw.map(item => {
+      const parsed = dateForSorting(item);
+      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
+    });
+  
+    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
+  
+    return stamped.map(({ item }) => ({
+      title: (item as any).degree || '',
+      organization: (item as any).institution || '',
+      date: ((item as any).startDate && (item as any).endDate)
+        ? `${(item as any).startDate} - ${(item as any).endDate}`
+        : ((item as any).startDateISO || (item as any).startDate || ''),
+      location: (item as any).location || '',
+      description: (item as any)?.description || '',
+      highlights: Array.isArray((item as any)?.achievements) ? (item as any).achievements : [],
+      __meta: {
+        startDateISO: (item as any)?.startDateISO,
+        endDateISO: (item as any)?.endDateISO,
+        current: (item as any)?.current ?? false
+      }
+    }));
+  }, [education, orderDesc]);
 
   // Skill data formatting
   const skillsData = {
@@ -422,14 +467,31 @@ const Resume: React.FC = () => {
   };
 
   // Format certifications data to match Timeline component structure
-  const certificationData = Array.isArray(certifications) ? certifications.map((cert: any) => ({
-    title: cert.title || '',
-    organization: cert.issuer || '',
-    date: `${cert.issueDate || ''} - ${cert.expiryDate || ''}`,
-    location: cert.credentialId ? `Credential ID: ${cert.credentialId}` : '',
-    description: cert.description || '',
-    highlights: cert.skills || [],
-  })) : [];
+  // Format certifications data to match Timeline component structure
+  // NOTE: expiryDate removed per request — only show issueDate
+  const sortedCertifications = useMemo(() => {
+    const raw = Array.isArray(certifications) ? [...certifications] : [];
+  
+    const stamped = raw.map(item => {
+      // dateForSorting will check issueDate / issueDateISO as fallback
+      const parsed = dateForSorting(item);
+      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
+    });
+  
+    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
+  
+    return stamped.map(({ item }) => ({
+      title: item.title || '',
+      organization: item.issuer || '',
+      // show only issueDate (you requested expiry removed)
+      date: item.issueDate || item.issueDateISO || '',
+      location: item.credentialId ? `Credential ID: ${item.credentialId}` : '',
+      description: item.description || '',
+      highlights: item.skills || [],
+      __meta: { issueDateISO: item.issueDateISO }
+    }));
+  }, [certifications, orderDesc]);
+  
 
   return (
     <Box>
@@ -538,11 +600,21 @@ const Resume: React.FC = () => {
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          <Timeline items={experienceData} />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+              {orderDesc ? "Newest first" : "Oldest first"}
+            </Button>
+          </Box>
+          <Timeline items={sortedExperience} />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <Timeline items={educationData} />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+              {orderDesc ? "Newest first" : "Oldest first"}
+            </Button>
+          </Box>
+          <Timeline items={sortedEducation} />
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
@@ -621,8 +693,14 @@ const Resume: React.FC = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          <Timeline items={certificationData} />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+              {orderDesc ? "Newest first" : "Oldest first"}
+            </Button>
+          </Box>
+          <Timeline items={sortedCertifications} />
         </TabPanel>
+
       </Paper>
     </Box>
   );

@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Letter of Recommendation - Web Development Intern",
+    "issuer": "VanillaKart",
+    "issueDate": "2025",
+    "expiryDate": "No Expiration",
+    "credentialId": "",
+    "credentialUrl": "",
+    "description": "Received a Letter of Recommendation for contributions in web development, SEO optimization, and content creation during the internship.",
+    "skills": ["Web Development", "SEO", "Content Writing", "Team Collaboration"],
+    "certificateImage": "",
+    "order": 1
+  },
+  {
+    "title": "Letter of Recommendation - Digital Marketing Intern",
+    "issuer": "Finnfluent Education",
+    "issueDate": "February 2025",
+    "expiryDate": "No Expiration",
+    "credentialId": "",
+    "credentialUrl": "",
+    "description": "Received a Letter of Recommendation for outstanding performance in social media marketing, PR content creation, and strategic brand contributions.",
+    "skills": ["Digital Marketing", "Social Media Strategy", "Content Creation", "PR Writing"],
+    "certificateImage": "",
+    "order": 2
+  },
+  {
+    "title": "Letter of Recommendation - Teacher Assistant",
+    "issuer": "Vijay Shekhar Academy",
+    "issueDate": "2023",
+    "expiryDate": "No Expiration",
+    "credentialId": "",
+    "credentialUrl": "",
+    "description": "Received a Letter of Recommendation for impactful mentorship, fair assessments, and improved student comprehension through teaching assistance.",
+    "skills": ["Teaching", "Mentoring", "Curriculum Planning", "Evaluation"],
+    "certificateImage": "",
+    "order": 3
+  },
+  {
+    "title": "Letter of Recommendation - Digital Marketing Intern",
+    "issuer": "Pawzzitive Welfare Foundation",
+    "issueDate": "2024",
+    "expiryDate": "No Expiration",
+    "credentialId": "",
+    "credentialUrl": "",
+    "description": "Received a Letter of Recommendation for dedication, initiative, and impactful work in fundraising, donor outreach, and marketing campaigns.",
+    "skills": ["Digital Marketing", "Fundraising", "Donor Outreach", "Social Media Campaigns"],
+    "certificateImage": "",
+    "order": 4
+  },
+  {
+    "title": "Letter of Recommendation - IT Engineer Intern",
+    "issuer": "Arms Robotics",
+    "issueDate": "July 2025",
+    "expiryDate": "No Expiration",
+    "credentialId": "",
+    "credentialUrl": "",
+    "description": "Received a Letter of Recommendation for exceptional initiative and technical contributions in IT, embedded systems, AI/ML, automation, and hardware-software integration.",
+    "skills": ["Embedded Systems", "AI/ML", "Industrial Automation", "Web Development", "System Integration"],
+    "certificateImage": "",
+    "order": 5
+  }
+]

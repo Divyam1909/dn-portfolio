@@ -6,95 +6,51 @@
  */
 
 // ======= PERSONAL INFORMATION =======
-// TODO: Update with your personal information
 export const personalInfo = {
-  name: "Divyam Navin", // TODO: Update with your full name
-  title: "Web Developer", // TODO: Update with your professional title
-  email: "divyamnavin@gmail.com", // TODO: Update with your email
-  phone: "", // TODO: Add your phone number (optional)
-  location: "Thane, Maharashtra, India", // TODO: Update with your location
-  profileImage: "", // TODO: Add your profile image URL (upload to Cloudinary or use from backend)
-  bio: "", // TODO: Add your professional bio (2-3 sentences about your expertise and passion)
+  name: "Divyam Navin",
+  title: "Full Stack Web Developer",
+  email: "divyamnavin@gmail.com",
+  phone: "",
+  location: "Thane, Maharashtra, India",
+  profileImage: "",
+  bio: "Passionate full-stack developer with expertise in React, Node.js, and modern web technologies. I love building beautiful, performant, and user-friendly applications.",
+  // Social links embedded in personal info for easier access
+  socialLinks: {
+    github: "https://github.com/divyamnavin",
+    linkedin: "https://linkedin.com/in/divyamnavin",
+    twitter: "",
+    instagram: "",
+    website: ""
+  }
 };
 
-// ======= SOCIAL LINKS =======
-// TODO: Update with your social media profiles
+// ======= SOCIAL LINKS (Legacy - kept for backward compatibility) =======
 export const socialLinks = {
-  github: "", // TODO: Add your GitHub profile URL
-  linkedin: "", // TODO: Add your LinkedIn profile URL
-  twitter: "", // TODO: Add your Twitter profile URL (optional)
-  instagram: "", // TODO: Add your Instagram profile URL (optional)
-  // Add or remove social profiles as needed
+  github: "https://github.com/divyamnavin",
+  linkedin: "https://linkedin.com/in/divyamnavin",
+  twitter: "",
+  instagram: "",
 };
 
 // ======= EDUCATION =======
-// TODO: Add your education history
-export const education = [
-  // TODO: Add your education entries following this structure:
-  // {
-  //   degree: "Your Degree Name",
-  //   institution: "Institution Name",
-  //   location: "City, Country",
-  //   startDate: "Month Year",
-  //   endDate: "Month Year or Present",
-  //   description: "Brief description of your studies and focus areas",
-  //   achievements: [
-  //     "Achievement 1",
-  //     "Achievement 2"
-  //   ]
-  // },
-];
+// Education entries are loaded from MongoDB
+export const education: any[] = [];
 
 // ======= WORK EXPERIENCE =======
-// TODO: Add your work experience
-export const workExperience = [
-  // TODO: Add your work experience entries following this structure:
-  // {
-  //   title: "Your Job Title",
-  //   company: "Company Name",
-  //   location: "City, State/Country",
-  //   startDate: "Month Year",
-  //   endDate: "Month Year or Present",
-  //   description: "Brief description of your role and responsibilities",
-  //   achievements: [
-  //     "Key achievement 1 with measurable impact",
-  //     "Key achievement 2 with measurable impact",
-  //     "Key achievement 3 with measurable impact"
-  //   ],
-  // },
-];
+// Work experience entries are loaded from MongoDB
+export const workExperience: any[] = [];
 
 // ======= SKILLS =======
-// TODO: Add your skills and proficiency levels
+// Skills are loaded from MongoDB
 export const skills = {
-  technical: [
-    // TODO: Add your technical skills with proficiency level (0-100)
-    // { name: "Skill Name", level: 85 },
-  ],
-  soft: [
-    // TODO: Add your soft skills
-    // "Skill Name",
-  ],
-  languages: [
-    // TODO: Add languages you speak
-    // { name: "Language", proficiency: "Fluent/Native/Intermediate/Basic" },
-  ],
+  technical: [] as any[],
+  soft: [] as string[],
+  languages: [] as any[],
 };
 
 // ======= PROJECTS =======
-// TODO: Add your projects
-export const projects = [
-  // TODO: Add your project entries following this structure:
-  // {
-  //   title: "Project Title",
-  //   description: "Brief description of the project, what it does, and the problem it solves",
-  //   technologies: ["Tech1", "Tech2", "Tech3"], // Technologies used
-  //   image: "", // Project screenshot/thumbnail URL (upload via admin panel)
-  //   demoLink: "https://demo-url.com", // Optional: Live demo link
-  //   sourceLink: "https://github.com/yourusername/repo", // Optional: GitHub repo link
-  //   featured: true, // Set to true for featured projects to show prominently
-  // },
-];
+// Projects are loaded from MongoDB
+export const projects: any[] = [];
 
 // ======= GUIDE MESSAGES =======
 export const guideMessages = {
@@ -182,17 +138,16 @@ export const themeSettings = {
 };
 
 // ======= SEO SETTINGS =======
-// TODO: Update SEO settings for better search engine visibility
 export const seoSettings = {
-  title: "", // TODO: Add your portfolio page title (e.g., "Your Name - Job Title")
-  description: "", // TODO: Add a brief description for search engines (150-160 characters)
-  keywords: "web developer, portfolio, react, frontend, javascript, typescript", // TODO: Add relevant keywords
-  ogImage: "", // TODO: Add Open Graph image URL for social media sharing (1200x630px recommended)
-  twitterHandle: "", // TODO: Add your Twitter handle (e.g., "@yourusername")
+  title: "Divyam Navin - Full Stack Web Developer",
+  description: "Portfolio of Divyam Navin, a Full Stack Web Developer specializing in React, Node.js, and modern web technologies.",
+  keywords: "web developer, portfolio, react, frontend, javascript, typescript, node.js, full stack",
+  ogImage: "",
+  twitterHandle: "",
 };
 
 // ======= CONTACT FORM =======
-// TODO: Configure email service for contact form (optional - handled by backend)
+// Contact form submissions are handled by the backend API
 export const contactForm = {
   enableEmailService: true,
   emailServiceProvider: "backend", // Using backend API for contact form

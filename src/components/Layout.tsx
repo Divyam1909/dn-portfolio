@@ -33,6 +33,9 @@ import FlowingHeader from './FlowingHeader';
 interface LayoutProps {
   children: ReactNode;
   toggleTheme: () => void;
+  toggleView: () => void; // Add toggleView prop
+  setLastPathFromUniverseView: (path: string | null) => void;
+  lastPathFromUniverseView: string | null;
 }
 
 // Navigation items definition with keyboard shortcuts
@@ -44,7 +47,7 @@ const navItems = [
   { name: 'Contact', path: '/contact', icon: <EmailIcon />, shortcut: 'Alt+5' },
 ];
 
-const Layout: React.FC<LayoutProps> = ({ children, toggleTheme }) => {
+const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setLastPathFromUniverseView, lastPathFromUniverseView }) => {
   const theme = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
@@ -61,8 +64,19 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme }) => {
       setIsNavigating(false);
     }, 500); // Match with animation duration
 
+    // If navigating to a new path from the Universe View, record it.
+    // If navigating back to the root ('/') and the last path was from Universe View,
+    // then toggle back to Universe View.
+    // This logic is being removed as per user request to default to simplified view
+    // if (location.pathname !== '/' && !lastPathFromUniverseView) {
+    //   setLastPathFromUniverseView(location.pathname);
+    // } else if (location.pathname === '/' && lastPathFromUniverseView) {
+    //   toggleView();
+    //   setLastPathFromUniverseView(null);
+    // }
+
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, [location.pathname, lastPathFromUniverseView, setLastPathFromUniverseView, toggleView]);
 
   // Set up keyboard shortcuts for navigation
   useEffect(() => {
@@ -310,13 +324,14 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme }) => {
       {/* Main content with page transitions */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Container 
-          maxWidth="lg" 
+          maxWidth={false}
+          disableGutters
           sx={{ 
-            py: { xs: 2, sm: 3, md: 4 },
-            px: { xs: 2, sm: 3 },
+            py: 0,
+            px: 0,
             width: '100%',
             boxSizing: 'border-box',
-            overflow: 'hidden'
+            overflow: 'visible'
           }}
         >
           <AnimatePresence mode="wait">
@@ -343,30 +358,36 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme }) => {
         </Container>
       </Box>
 
-      {/* Footer */}
-      <Box
-        component="footer"
+      {/* Universe View Button - Bottom Right */}
+      <Button
+        variant="contained"
+        onClick={toggleView}
         sx={{
-          py: 3,
-          px: 2,
-          mt: 'auto',
-          width: '100%',
-          boxSizing: 'border-box',
-          backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.5)' : 'rgba(245, 245, 245, 0.5)',
-          backdropFilter: 'blur(8px)',
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          bgcolor: '#FFD60A',
+          color: '#1a1a2e',
+          fontFamily: '"Orbitron", monospace',
+          fontWeight: 700,
+          fontSize: { xs: '0.75rem', sm: '0.85rem' },
+          textTransform: 'uppercase',
+          borderRadius: 2,
+          px: 3,
+          py: 1.5,
+          boxShadow: '0 0 20px rgba(255, 214, 10, 0.6)',
+          transition: 'all 0.3s ease',
+          zIndex: theme.zIndex.appBar + 10,
+          '&:hover': {
+            bgcolor: '#FFE066',
+            boxShadow: '0 0 30px rgba(255, 214, 10, 0.9)',
+            transform: 'translateY(-2px)',
+          },
         }}
       >
-        <Container maxWidth="lg">
-          <Typography variant="body2" color="text.secondary" align="center">
-            © {new Date().getFullYear()} Portfolio. All rights reserved.
-          </Typography>
-          
-          {/* Keyboard navigation hint */}
-          <Typography variant="caption" color="text.secondary" align="center" sx={{ display: 'block', mt: 1 }}>
-            Pro tip: Use Alt+1 through Alt+5 for keyboard navigation
-          </Typography>
-        </Container>
-      </Box>
+        Universe View
+      </Button>
+
     </Box>
   );
 };

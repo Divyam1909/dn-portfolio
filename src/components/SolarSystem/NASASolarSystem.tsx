@@ -20,9 +20,11 @@ interface Planet {
 interface NASASolarSystemProps {
   resetTrigger?: number;
   onCameraDistanceChange?: (distance: number) => void;
+  onPlanetClick: (route: string) => void;
+  onSunClick: () => void; // Add onSunClick prop
 }
 
-const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onCameraDistanceChange }) => {
+const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onCameraDistanceChange, onPlanetClick, onSunClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -268,42 +270,47 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+      const intersects = raycaster.intersectObjects(planets.map(p => p.mesh).concat(sun)); // Include sun in intersect objects
 
       if (intersects.length > 0) {
-        const planet = planets.find(p => p.mesh === intersects[0].object);
-        if (planet) {
-          // Smooth camera animation before navigating
-          const targetPos = planet.mesh.getWorldPosition(new THREE.Vector3());
-          const direction = camera.position.clone().sub(targetPos).normalize();
-          const geometry = planet.mesh.geometry as THREE.SphereGeometry;
-          const distance = (geometry.parameters?.radius || 1) * 5;
-          const newPos = targetPos.clone().add(direction.multiplyScalar(distance));
-          
-          const startPos = camera.position.clone();
-          const duration = 1000;
-          const startTime = Date.now();
-          
-          const animateCamera = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = progress < 0.5
-              ? 4 * progress * progress * progress
-              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        const intersectedObject = intersects[0].object;
+        if (intersectedObject === sun) {
+          onSunClick();
+        } else {
+          const planet = planets.find(p => p.mesh === intersectedObject);
+          if (planet) {
+            // Smooth camera animation before navigating
+            const targetPos = planet.mesh.getWorldPosition(new THREE.Vector3());
+            const direction = camera.position.clone().sub(targetPos).normalize();
+            const geometry = planet.mesh.geometry as THREE.SphereGeometry;
+            const distance = (geometry.parameters?.radius || 1) * 5;
+            const newPos = targetPos.clone().add(direction.multiplyScalar(distance));
             
-            camera.position.lerpVectors(startPos, newPos, eased);
-            camera.lookAt(targetPos);
-            controls.target.copy(targetPos);
-            controls.update();
+            const startPos = camera.position.clone();
+            const duration = 1000;
+            const startTime = Date.now();
             
-            if (progress < 1) {
-              requestAnimationFrame(animateCamera);
-            } else {
-              setTimeout(() => navigate(planet.route), 200);
-            }
-          };
-          
-          animateCamera();
+            const animateCamera = () => {
+              const elapsed = Date.now() - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+              
+              camera.position.lerpVectors(startPos, newPos, eased);
+              camera.lookAt(targetPos);
+              controls.target.copy(targetPos);
+              controls.update();
+              
+              if (progress < 1) {
+                requestAnimationFrame(animateCamera);
+              } else {
+                onPlanetClick(planet.route);
+              }
+            };
+            
+            animateCamera();
+          }
         }
       }
     };

@@ -1,0 +1,87 @@
+[
+  {
+    "text": "The only way to do great work is to love what you do.",
+    "author": "Steve Jobs",
+    "category": "inspiration",
+    "isActive": true,
+    "order": 1
+  },
+  {
+    "text": "Code is like humor. When you have to explain it, it's bad.",
+    "author": "Cory House",
+    "category": "programming",
+    "isActive": true,
+    "order": 2
+  },
+  {
+    "text": "The universe is not only queerer than we suppose, but queerer than we can suppose.",
+    "author": "J.B.S. Haldane",
+    "category": "universe",
+    "isActive": true,
+    "order": 3
+  },
+  {
+    "text": "Any sufficiently advanced technology is indistinguishable from magic.",
+    "author": "Arthur C. Clarke",
+    "category": "technology",
+    "isActive": true,
+    "order": 4
+  },
+  {
+    "text": "First, solve the problem. Then, write the code.",
+    "author": "John Johnson",
+    "category": "programming",
+    "isActive": true,
+    "order": 5
+  },
+  {
+    "text": "The cosmos is within us. We are made of star-stuff.",
+    "author": "Carl Sagan",
+    "category": "universe",
+    "isActive": true,
+    "order": 6
+  },
+  {
+    "text": "Simplicity is the soul of efficiency.",
+    "author": "Austin Freeman",
+    "category": "programming",
+    "isActive": true,
+    "order": 7
+  },
+  {
+    "text": "The science of today is the technology of tomorrow.",
+    "author": "Edward Teller",
+    "category": "science",
+    "isActive": true,
+    "order": 8
+  },
+  {
+    "text": "In the middle of difficulty lies opportunity.",
+    "author": "Albert Einstein",
+    "category": "inspiration",
+    "isActive": true,
+    "order": 9
+  },
+  {
+    "text": "The best way to predict the future is to create it.",
+    "author": "Peter Drucker",
+    "category": "technology",
+    "isActive": true,
+    "order": 10
+  },
+  {
+    "text": "Look up at the stars and not down at your feet.",
+    "author": "Stephen Hawking",
+    "category": "universe",
+    "isActive": true,
+    "order": 11
+  },
+  {
+    "text": "Every great developer you know got there by solving problems they were unqualified to solve.",
+    "author": "Patrick McKenzie",
+    "category": "programming",
+    "isActive": true,
+    "order": 12
+  }
+]
+

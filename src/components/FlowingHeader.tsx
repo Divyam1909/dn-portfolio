@@ -116,7 +116,7 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
                 },
               }}
             >
-              Portfolio
+              Divyam's Portfolio
             </Typography>
           </motion.div>
 

@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { usePortfolioData } from '../contexts/DataContext';
+import { portfolioAPI } from '../services/api';
 
 interface ContactInfo {
   icon: React.ReactNode;
@@ -36,6 +37,9 @@ const Contact: React.FC = () => {
   const isDark = theme.palette.mode === 'dark';
   const { data } = usePortfolioData();
   const { personalInfo, contactForm } = data;
+  
+  // Social links from data
+  const socialLinks = personalInfo.socialLinks || {};
   
   // Dynamic contact info from portfolioData
   const contactInfo: ContactInfo[] = [
@@ -101,15 +105,20 @@ const Contact: React.FC = () => {
     return !Object.values(errors).some(Boolean);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsSubmitting(true);
       
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false);
+      try {
+        await portfolioAPI.submitContact({
+          name: formValues.name,
+          email: formValues.email,
+          subject: formValues.subject || 'Contact Form Submission',
+          message: formValues.message,
+        });
+        
         setShowSuccess(true);
         setFormValues({
           name: '',
@@ -117,7 +126,12 @@ const Contact: React.FC = () => {
           subject: '',
           message: '',
         });
-      }, 1500);
+      } catch (error) {
+        console.error('Error submitting contact form:', error);
+        setShowError(true);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -236,21 +250,37 @@ const Contact: React.FC = () => {
                   You can also find me on these platforms:
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  {/* Map of social media buttons would go here */}
-                  <Button
-                    variant="outlined"
-                    startIcon={<GitHubIcon />}
-                    sx={{ borderRadius: 8 }}
-                  >
-                    GitHub
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<LinkedInIcon />}
-                    sx={{ borderRadius: 8 }}
-                  >
-                    LinkedIn
-                  </Button>
+                  {socialLinks.github && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<GitHubIcon />}
+                      component="a"
+                      href={socialLinks.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ borderRadius: 8 }}
+                    >
+                      GitHub
+                    </Button>
+                  )}
+                  {socialLinks.linkedin && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<LinkedInIcon />}
+                      component="a"
+                      href={socialLinks.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ borderRadius: 8 }}
+                    >
+                      LinkedIn
+                    </Button>
+                  )}
+                  {!socialLinks.github && !socialLinks.linkedin && (
+                    <Typography variant="body2" color="text.secondary">
+                      Social links coming soon.
+                    </Typography>
+                  )}
                 </Box>
               </Paper>
             </motion.div>

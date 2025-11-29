@@ -11,7 +11,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Chip
+  Chip,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
@@ -30,6 +32,18 @@ const About: React.FC = () => {
   const isDark = theme.palette.mode === 'dark';
   const { data } = usePortfolioData();
   const { personalInfo, skills, education } = data;
+  
+  // Social links from data
+  const socialLinks = personalInfo.socialLinks || {};
+  
+  // Interests/Hobbies - can be extended in database
+  const interests = [
+    'Web Development',
+    'Open Source',
+    'UI/UX Design',
+    'Learning New Technologies',
+    'Problem Solving'
+  ];
   
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
@@ -99,10 +113,70 @@ const About: React.FC = () => {
                   {personalInfo.title}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1.5, mt: 1 }}>
-                  <IconLink icon={<GitHubIcon />} color="#333" hoverColor={isDark ? '#fff' : '#000'} />
-                  <IconLink icon={<LinkedInIcon />} color="#0077B5" />
-                  <IconLink icon={<TwitterIcon />} color="#1DA1F2" />
-                  <IconLink icon={<InstagramIcon />} color="#E1306C" />
+                  {socialLinks.github && (
+                    <Tooltip title="GitHub" arrow>
+                      <IconButton
+                        component="a"
+                        href={socialLinks.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          color: isDark ? '#fff' : '#333',
+                          '&:hover': { transform: 'translateY(-3px)', color: isDark ? '#90CAF9' : '#000' }
+                        }}
+                      >
+                        <GitHubIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {socialLinks.linkedin && (
+                    <Tooltip title="LinkedIn" arrow>
+                      <IconButton
+                        component="a"
+                        href={socialLinks.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          color: '#0077B5',
+                          '&:hover': { transform: 'translateY(-3px)' }
+                        }}
+                      >
+                        <LinkedInIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {socialLinks.twitter && (
+                    <Tooltip title="Twitter" arrow>
+                      <IconButton
+                        component="a"
+                        href={socialLinks.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          color: '#1DA1F2',
+                          '&:hover': { transform: 'translateY(-3px)' }
+                        }}
+                      >
+                        <TwitterIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {socialLinks.instagram && (
+                    <Tooltip title="Instagram" arrow>
+                      <IconButton
+                        component="a"
+                        href={socialLinks.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          color: '#E1306C',
+                          '&:hover': { transform: 'translateY(-3px)' }
+                        }}
+                      >
+                        <InstagramIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
               </Box>
               
@@ -163,9 +237,8 @@ const About: React.FC = () => {
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   <Typography variant="body1" paragraph>
-                    {personalInfo.bio || 'Professional bio will be added via admin panel.'}
+                    {personalInfo.bio || 'Passionate developer dedicated to creating exceptional digital experiences.'}
                   </Typography>
-                  {/* TODO: Add additional bio paragraphs via admin panel */}
                 </Paper>
               </motion.div>
             </Grid>
@@ -247,8 +320,7 @@ const About: React.FC = () => {
                       ))
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        {/* TODO: Add education entries via admin panel */}
-                        No education data available. Add via admin panel.
+                        Education details coming soon.
                       </Typography>
                     )}
                   </List>
@@ -278,10 +350,19 @@ const About: React.FC = () => {
                     </Typography>
                   </Box>
                   <Divider sx={{ mb: 2 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {/* TODO: Add interests/hobbies via admin panel */}
-                    Interests will be managed through the admin panel.
-                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {interests.map((interest, index) => (
+                      <Chip 
+                        key={index}
+                        label={interest}
+                        size="small"
+                        sx={{
+                          bgcolor: isDark ? 'rgba(144, 202, 249, 0.1)' : 'rgba(63, 81, 181, 0.1)',
+                          color: theme.palette.primary.main,
+                        }}
+                      />
+                    ))}
+                  </Box>
                 </Paper>
               </motion.div>
             </Grid>
@@ -314,52 +395,5 @@ const SkillChip: React.FC<{ label: string }> = ({ label }) => {
     />
   );
 };
-
-const IconLink: React.FC<{ icon: React.ReactNode, color: string, hoverColor?: string }> = ({ 
-  icon, 
-  color, 
-  hoverColor 
-}) => (
-  <Box 
-    component="a" 
-    href="#" 
-    sx={{ 
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 36,
-      height: 36,
-      borderRadius: '50%',
-      color: color,
-      transition: 'all 0.2s',
-      '&:hover': {
-        transform: 'translateY(-3px)',
-        color: hoverColor || color,
-        boxShadow: '0 5px 10px rgba(0,0,0,0.2)'
-      }
-    }}
-  >
-    {icon}
-  </Box>
-);
-
-// Future use: Interest/Hobbies section
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const InterestItem: React.FC<{ text: string }> = ({ text }) => (
-  <ListItem disablePadding sx={{ mb: 1 }}>
-    <ListItemIcon sx={{ minWidth: 32 }}>
-      <Box 
-        sx={{ 
-          width: 8, 
-          height: 8, 
-          borderRadius: '50%', 
-          bgcolor: 'primary.main',
-          boxShadow: '0 0 8px rgba(144, 202, 249, 0.5)' 
-        }} 
-      />
-    </ListItemIcon>
-    <ListItemText primary={text} />
-  </ListItem>
-);
 
 export default About; 

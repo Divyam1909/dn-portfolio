@@ -1,0 +1,35 @@
+[
+  {
+    "title": "EduSage - Smart Education Management System with AI",
+    "description": "A full-stack smart education management system designed to streamline academic workflows using AI-driven features. Includes student management, analytics, and intelligent automation tools.",
+    "technologies": ["MongoDB", "Express.js", "React", "Node.js", "Python"],
+    "image": "",
+    "demoLink": "https://edu-sage.vercel.app",
+    "sourceLink": "",
+    "featured": true,
+    "order": 1,
+    "status": "active"
+  },
+  {
+    "title": "Wave Habitat - Hardware Integration and Management System",
+    "description": "A hardware-software integrated system developed during internship at Arms Robotics, enabling real-time interaction with company hardware and automation modules.",
+    "technologies": ["HTML", "CSS", "PHP", "Java", "Python"],
+    "image": "",
+    "demoLink": "https://armsrobotics.com",
+    "sourceLink": "",
+    "featured": true,
+    "order": 2,
+    "status": "active"
+  },
+  {
+    "title": "M.A.S.K. - Encryption in Multi-Agent Model",
+    "description": "A research-oriented project developed for IIT Dharwad, focusing on secure encrypted communication between multi-agent systems using modern cryptographic techniques.",
+    "technologies": ["Python", "Encryption Algorithms", "AI/ML Concepts"],
+    "image": "",
+    "demoLink": "",
+    "sourceLink": "",
+    "featured": false,
+    "order": 3,
+    "status": "in-progress"
+  }
+]

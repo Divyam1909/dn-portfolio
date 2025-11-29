@@ -8,6 +8,7 @@ import {
   useTheme,
   useMediaQuery,
   Container,
+  Button,
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -18,7 +19,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NASASolarSystem from '../components/SolarSystem/NASASolarSystem';
 import UniverseQuote from '../components/UniverseQuote';
 
-const UniverseView: React.FC = () => {
+interface UniverseViewProps {
+  toggleView: () => void;
+}
+
+const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -28,6 +33,11 @@ const UniverseView: React.FC = () => {
   const [creditsExpanded, setCreditsExpanded] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [cameraDistance, setCameraDistance] = useState(45);
+
+  const handlePlanetClick = (route: string) => {
+    toggleView(); // Switch to simplified view
+    navigate(route); // Navigate to the clicked planet's route
+  };
 
   // Hide hint after 5 seconds
   useEffect(() => {
@@ -48,7 +58,15 @@ const UniverseView: React.FC = () => {
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#000' }}>
       {/* NASA Solar System Scene */}
-      <NASASolarSystem resetTrigger={resetTrigger} onCameraDistanceChange={handleCameraDistanceChange} />
+      <NASASolarSystem
+        resetTrigger={resetTrigger}
+        onCameraDistanceChange={handleCameraDistanceChange}
+        onPlanetClick={handlePlanetClick}
+        onSunClick={() => {
+          toggleView();
+          navigate('/');
+        }} // Add onSunClick handler
+      />
 
       {/* Top Bar with glass morphism */}
       <Box
@@ -346,13 +364,43 @@ const UniverseView: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* Simplified View Button - Bottom Right */}
+      <Button
+        variant="contained"
+        onClick={toggleView}
+        sx={{
+          position: 'absolute',
+          bottom: 20,
+          right: 20,
+          bgcolor: '#FFD60A',
+          color: '#1a1a2e',
+          fontFamily: '"Orbitron", monospace',
+          fontWeight: 700,
+          fontSize: { xs: '0.75rem', sm: '0.85rem' },
+          textTransform: 'uppercase',
+          borderRadius: 2,
+          px: 3,
+          py: 1.5,
+          boxShadow: '0 0 20px rgba(255, 214, 10, 0.6)',
+          transition: 'all 0.3s ease',
+          zIndex: 1000,
+          '&:hover': {
+            bgcolor: '#FFE066',
+            boxShadow: '0 0 30px rgba(255, 214, 10, 0.9)',
+            transform: 'translateY(-2px)',
+          },
+        }}
+      >
+        Simplified View
+      </Button>
+
       {/* Reset View Button - Bottom Right */}
       <Tooltip title="Reset View" arrow>
         <IconButton
           onClick={handleResetView}
           sx={{
             position: 'absolute',
-            bottom: 20,
+            bottom: 90, // Adjusted position to be above Simplified View button
             right: 20,
             color: '#93C5FD',
             bgcolor: 'rgba(147, 197, 253, 0.1)',
