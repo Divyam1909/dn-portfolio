@@ -117,7 +117,7 @@ const Projects: React.FC = () => {
   const categories = ['All', ...Array.from(new Set(projectsData.map(project => project.category)))];
   
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', overflow: 'hidden', px: { xs: 2, sm: 4, md: 6 }, py: { xs: 2, sm: 3, md: 4 } }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

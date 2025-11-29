@@ -20,6 +20,7 @@ import {
   Send as SendIcon,
   GitHub as GitHubIcon,
   LinkedIn as LinkedInIcon,
+  Instagram as InstagramIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { usePortfolioData } from '../contexts/DataContext';
@@ -141,7 +142,7 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', overflow: 'hidden', px: { xs: 2, sm: 4, md: 6 }, py: { xs: 2, sm: 3, md: 4 } }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -276,7 +277,28 @@ const Contact: React.FC = () => {
                       LinkedIn
                     </Button>
                   )}
-                  {!socialLinks.github && !socialLinks.linkedin && (
+                  {socialLinks.instagram && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<InstagramIcon />}
+                      component="a"
+                      href={socialLinks.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ 
+                        borderRadius: 8,
+                        borderColor: '#E1306C',
+                        color: '#E1306C',
+                        '&:hover': {
+                          borderColor: '#E1306C',
+                          backgroundColor: 'rgba(225, 48, 108, 0.08)',
+                        }
+                      }}
+                    >
+                      Instagram
+                    </Button>
+                  )}
+                  {!socialLinks.github && !socialLinks.linkedin && !socialLinks.instagram && (
                     <Typography variant="body2" color="text.secondary">
                       Social links coming soon.
                     </Typography>

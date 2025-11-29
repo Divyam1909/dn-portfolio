@@ -46,7 +46,7 @@ const About: React.FC = () => {
   ];
   
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', overflow: 'hidden', px: { xs: 2, sm: 4, md: 6 }, py: { xs: 2, sm: 3, md: 4 } }}>
       <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
         <Grid item xs={12}>
           <motion.div

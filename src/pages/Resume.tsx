@@ -494,7 +494,7 @@ const Resume: React.FC = () => {
   
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, py: { xs: 2, sm: 3, md: 4 } }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -527,21 +527,6 @@ const Resume: React.FC = () => {
           </Button>
         </Box>
 
-        <Alert
-          severity="info"
-          sx={{
-            mb: 4,
-            borderRadius: 2,
-            backgroundColor: isDark
-              ? 'rgba(41, 182, 246, 0.1)'
-              : 'rgba(41, 182, 246, 0.08)',
-            '& .MuiAlert-icon': {
-              color: theme.palette.primary.main,
-            },
-          }}
-        >
-          This is an interactive resume. Click the tabs below to navigate through different sections.
-        </Alert>
       </motion.div>
 
       <Paper
