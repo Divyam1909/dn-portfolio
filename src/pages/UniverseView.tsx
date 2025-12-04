@@ -36,10 +36,22 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
   const [cameraDistance, setCameraDistance] = useState(45);
 
   const handlePlanetClick = (route: string) => {
-    // Set hash to simplified before navigating to ensure proper state on refresh
-    window.location.hash = 'simplified';
-    toggleView(); // Switch to simplified view
-    navigate(route); // Navigate to the clicked planet's route
+    // Switch to simplified view
+    toggleView();
+    // Navigate to the route
+    // Note: React Router handles hash fragments in routes (e.g., /resume#experience)
+    navigate(route);
+    // Set hash to simplified after a brief delay to ensure navigation completes
+    // This preserves view state on refresh
+    setTimeout(() => {
+      // Extract the pathname without hash for the view hash
+      const pathname = route.split('#')[0];
+      // Set view hash only if we're navigating to a route without a section hash
+      // Routes with section hashes (like /resume#experience) will keep their hash
+      if (pathname === route) {
+        window.location.hash = 'simplified';
+      }
+    }, 100);
   };
 
   // Hide hint after 5 seconds

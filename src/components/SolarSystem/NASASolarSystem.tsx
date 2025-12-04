@@ -366,8 +366,8 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       labelDiv.style.border = '1px solid rgba(255, 214, 10, 0.5)';
       labelDiv.style.backdropFilter = 'blur(5px)';
       labelDiv.style.whiteSpace = 'nowrap';
-      // Enable pointer events on the label itself so it can be hovered
-      labelDiv.style.pointerEvents = 'auto';
+      // Disable pointer events so clicks pass through to planets
+      labelDiv.style.pointerEvents = 'none';
       labelsContainer.appendChild(labelDiv);
       labelElements.push({ div: labelDiv, planet: labelData.planet });
     });

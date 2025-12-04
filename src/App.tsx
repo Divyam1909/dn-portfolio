@@ -69,19 +69,30 @@ const RoutingHandler: React.FC<{
   const [lastPathFromUniverseView, setLastPathFromUniverseView] = React.useState<string | null>(null);
   const previousPathnameRef = React.useRef<string>(location.pathname);
   const wasInSimplifiedViewRef = React.useRef<boolean>(!getInitialView());
+  const isUpdatingHashRef = React.useRef<boolean>(false); // Track when we're programmatically updating hash
 
   const toggleView = () => {
     setShowUniverseView(prev => {
       const newValue = !prev;
       wasInSimplifiedViewRef.current = !newValue;
+      // Mark that we're updating hash programmatically to prevent hashchange handler from running
+      isUpdatingHashRef.current = true;
       // Update URL hash when view changes
       window.location.hash = newValue ? 'universe' : 'simplified';
+      // Reset flag after a brief delay
+      setTimeout(() => {
+        isUpdatingHashRef.current = false;
+      }, 50);
       // If switching to universe view, navigate to root
       if (newValue && location.pathname !== '/') {
         navigate('/');
         // Set hash after navigation
         setTimeout(() => {
+          isUpdatingHashRef.current = true;
           window.location.hash = 'universe';
+          setTimeout(() => {
+            isUpdatingHashRef.current = false;
+          }, 50);
         }, 0);
       }
       return newValue;
@@ -95,79 +106,101 @@ const RoutingHandler: React.FC<{
     const wasInSimplifiedView = wasInSimplifiedViewRef.current;
     const previousPathname = previousPathnameRef.current;
     
+    // Determine what the view should be
+    let shouldShowUniverse = false;
+    
     // If hash explicitly says universe, show universe view
     if (hash === '#universe') {
-      setShowUniverseView(true);
-      wasInSimplifiedViewRef.current = false;
-      previousPathnameRef.current = pathname;
-      return;
+      shouldShowUniverse = true;
     }
-    
     // If hash explicitly says simplified, show simplified view
-    if (hash === '#simplified') {
-      setShowUniverseView(false);
-      wasInSimplifiedViewRef.current = true;
-      previousPathnameRef.current = pathname;
-      return;
+    else if (hash === '#simplified') {
+      shouldShowUniverse = false;
     }
-    
     // If we're on a specific route (not root), show simplified view
-    if (pathname !== '/' && pathname !== '') {
-      setShowUniverseView(false);
-      wasInSimplifiedViewRef.current = true;
+    else if (pathname !== '/' && pathname !== '') {
+      shouldShowUniverse = false;
       // Set hash when navigating to non-root routes to preserve state on refresh
-      if (hash !== '#simplified') {
+      if (hash !== '#simplified' && !isUpdatingHashRef.current) {
+        isUpdatingHashRef.current = true;
         window.location.hash = 'simplified';
+        setTimeout(() => {
+          isUpdatingHashRef.current = false;
+        }, 50);
       }
-      previousPathnameRef.current = pathname;
-      return;
     }
-    
     // If we're navigating to root from a non-root path and were in simplified view, preserve it
-    if (pathname === '/' && previousPathname !== '/' && wasInSimplifiedView) {
-      setShowUniverseView(false);
-      wasInSimplifiedViewRef.current = true;
-      window.location.hash = 'simplified';
-      previousPathnameRef.current = pathname;
-      return;
+    else if (pathname === '/' && previousPathname !== '/' && wasInSimplifiedView) {
+      shouldShowUniverse = false;
+      if (!isUpdatingHashRef.current) {
+        isUpdatingHashRef.current = true;
+        window.location.hash = 'simplified';
+        setTimeout(() => {
+          isUpdatingHashRef.current = false;
+        }, 50);
+      }
+    }
+    // Default to universe view only on root path with no hash
+    else {
+      shouldShowUniverse = true;
     }
     
-    // Default to universe view only on root path with no hash
-    setShowUniverseView(true);
-    wasInSimplifiedViewRef.current = false;
-    previousPathnameRef.current = pathname;
+    // Only update state if it actually changed to avoid unnecessary re-renders
+    setShowUniverseView(prev => {
+      if (prev === shouldShowUniverse) {
+        // Still update refs even if state doesn't change
+        wasInSimplifiedViewRef.current = !shouldShowUniverse;
+        previousPathnameRef.current = pathname;
+        return prev;
+      }
+      wasInSimplifiedViewRef.current = !shouldShowUniverse;
+      previousPathnameRef.current = pathname;
+      return shouldShowUniverse;
+    });
   }, [location.pathname]);
 
   // Listen for hash changes (browser back/forward)
   React.useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash;
-      const pathname = location.pathname;
-      
-      // If hash explicitly says universe, show universe view
-      if (hash === '#universe') {
-        setShowUniverseView(true);
-        wasInSimplifiedViewRef.current = false;
+      // Skip if we're programmatically updating the hash to prevent circular updates
+      if (isUpdatingHashRef.current) {
         return;
       }
-      
-      // If hash explicitly says simplified, show simplified view
-      if (hash === '#simplified') {
-        setShowUniverseView(false);
-        wasInSimplifiedViewRef.current = true;
-        return;
-      }
-      
-      // If we're on a specific route (not root), show simplified view
-      if (pathname !== '/' && pathname !== '') {
-        setShowUniverseView(false);
-        wasInSimplifiedViewRef.current = true;
-        return;
-      }
-      
-      // Default to universe view only on root path
-      setShowUniverseView(true);
-      wasInSimplifiedViewRef.current = false;
+
+      // Defer state updates to next frame to avoid blocking the event handler
+      requestAnimationFrame(() => {
+        const hash = window.location.hash;
+        const pathname = location.pathname;
+        
+        // Determine what the view should be
+        let shouldShowUniverse = false;
+        
+        // If hash explicitly says universe, show universe view
+        if (hash === '#universe') {
+          shouldShowUniverse = true;
+        }
+        // If hash explicitly says simplified, show simplified view
+        else if (hash === '#simplified') {
+          shouldShowUniverse = false;
+        }
+        // If we're on a specific route (not root), show simplified view
+        else if (pathname !== '/' && pathname !== '') {
+          shouldShowUniverse = false;
+        }
+        // Default to universe view only on root path
+        else {
+          shouldShowUniverse = true;
+        }
+        
+        // Only update state if it actually changed to avoid unnecessary re-renders
+        setShowUniverseView(prev => {
+          if (prev === shouldShowUniverse) {
+            return prev; // No change needed
+          }
+          wasInSimplifiedViewRef.current = !shouldShowUniverse;
+          return shouldShowUniverse;
+        });
+      });
     };
 
     window.addEventListener('hashchange', handleHashChange);
