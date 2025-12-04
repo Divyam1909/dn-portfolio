@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Comet Cursor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050508; /* Deep space black */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            cursor: none; /* Hide default cursor */
+        }
+
+        /* The canvas where the cursor lives. 
+           pointer-events: none is CRITICAL. 
+           It allows clicks to pass through the canvas to buttons below. */
+        #cursor-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999; /* Always on top */
+            pointer-events: none;
+        }
+
+        /* Demo UI Elements (Just to show the cursor is working over items) */
+        .content {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            pointer-events: none; /* Let clicks pass to buttons */
+        }
+
+        h1 {
+            font-weight: 200;
+            font-size: 3rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            pointer-events: auto; /* Re-enable clicks for buttons */
+            padding: 15px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            cursor: none; /* Keep cursor hidden over button */
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(100, 220, 255, 0.4);
+            border-color: #fff;
+        }
+
+        /* Background stars canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Stars (Context for your website) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- The Cursor Canvas -->
+    <canvas id="cursor-canvas"></canvas>
+
+    <!-- Demo Content -->
+    <div class="content">
+        <h1>UNIVERSE UI</h1>
+        <button class="btn">Hover Me</button>
+    </div>
+
+    <script>
+        /**
+         * COMET CURSOR LOGIC
+         */
+        class CometCursor {
+            constructor() {
+                this.canvas = document.getElementById('cursor-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+                this.mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+                this.lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+                
+                this.particles = [];
+                
+                // Configuration
+                this.params = {
+                    coreSize: 4,
+                    glowSize: 50,
+                    // Bright purple/blue colors
+                    colorCore: '255, 255, 255', // Pure White center
+                    colorComa: '0, 200, 255',   // Cyan/Electric Blue glow
+                    colorTail: '160, 50, 255'   // Vibrant Purple tail
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                window.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+                
+                // Start Loop
+                this.animate();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            handleMouseMove(e) {
+                this.mouse.x = e.clientX;
+                this.mouse.y = e.clientY;
+            }
+
+            handleTouchMove(e) {
+                if(e.touches.length > 0) {
+                    this.mouse.x = e.touches[0].clientX;
+                    this.mouse.y = e.touches[0].clientY;
+                }
+            }
+
+            lerp(start, end, amt) {
+                return (1 - amt) * start + amt * end;
+            }
+
+            createParticle(x, y) {
+                // Longer lifespan for a longer trail
+                const life = Math.random() * 0.3 + 0.7; // 0.7 to 1.0 life
+                const size = Math.random() * 4 + 2;
+                
+                this.particles.push({
+                    x: x,
+                    y: y,
+                    // STATIONARY TRAIL: No directional velocity
+                    // Just a tiny bit of random expansion to look like cooling gas
+                    vx: (Math.random() - 0.5) * 0.2, 
+                    vy: (Math.random() - 0.5) * 0.2,
+                    life: life,
+                    maxLife: life,
+                    size: size
+                });
+            }
+
+            updateParticles() {
+                for (let i = 0; i < this.particles.length; i++) {
+                    const p = this.particles[i];
+                    
+                    // Move particle (just the tiny expansion)
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // Decrease life slowly for long trail
+                    p.life -= 0.008; 
+
+                    // Remove dead particles
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
+            drawParticles() {
+                // Use lighter blend mode for intense brightness
+                this.ctx.globalCompositeOperation = 'lighter';
+
+                for (let p of this.particles) {
+                    const opacity = p.life / p.maxLife;
+                    
+                    this.ctx.beginPath();
+                    // Shrink particle as it dies to simulate burning out
+                    const currentSize = p.size * opacity; 
+                    this.ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
+                    
+                    // Color blending:
+                    // High life = Blue/Cyan (Hot)
+                    // Low life = Purple (Cooling)
+                    let color = this.params.colorTail;
+                    if (opacity > 0.5) {
+                         color = this.params.colorComa;
+                    }
+
+                    this.ctx.fillStyle = `rgba(${color}, ${opacity})`;
+                    this.ctx.fill();
+                }
+            }
+
+            drawCometHead(x, y) {
+                // 1. Outer Glow (Coma) - made larger and brighter
+                const glow = this.ctx.createRadialGradient(x, y, this.params.coreSize, x, y, this.params.glowSize);
+                glow.addColorStop(0, `rgba(${this.params.colorComa}, 1)`); // Intense center
+                glow.addColorStop(0.3, `rgba(${this.params.colorTail}, 0.4)`);
+                glow.addColorStop(1, `rgba(${this.params.colorTail}, 0)`);
+                
+                this.ctx.fillStyle = glow;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.params.glowSize, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // 2. Bright White Core (The "Spark")
+                this.ctx.fillStyle = `rgba(${this.params.colorCore}, 1)`;
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowColor = `rgba(${this.params.colorComa}, 1)`;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.params.coreSize, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Add a second tiny intense core for the "hot" look
+                this.ctx.fillStyle = '#fff';
+                this.ctx.shadowBlur = 5;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.params.coreSize * 0.5, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Reset shadow
+                this.ctx.shadowBlur = 0;
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.pos.x = this.lerp(this.pos.x, this.mouse.x, 0.15);
+                this.pos.y = this.lerp(this.pos.y, this.mouse.y, 0.15);
+
+                const vx = this.mouse.x - this.lastMouse.x;
+                const vy = this.mouse.y - this.lastMouse.y;
+                const distance = Math.hypot(vx, vy);
+                
+                // Increased density for a solid continuous line
+                const steps = Math.ceil(distance * 1.5); 
+                
+                if (distance > 0.1) {
+                    for(let i=0; i<steps; i++) {
+                        const t = i / steps;
+                        // Interpolate position
+                        const spawnX = this.lerp(this.lastMouse.x, this.mouse.x, t);
+                        const spawnY = this.lerp(this.lastMouse.y, this.mouse.y, t);
+                        
+                        // Spawn particle at that exact spot
+                        // We removed the -vx, -vy arguments because they don't move
+                        const jitter = 2; 
+                        this.createParticle(
+                            spawnX + (Math.random() - 0.5) * jitter, 
+                            spawnY + (Math.random() - 0.5) * jitter
+                        );
+                    }
+                } else {
+                    // Idle "burn" effect
+                    for(let i=0; i<2; i++) {
+                        this.createParticle(
+                            this.pos.x + (Math.random() - 0.5) * 2, 
+                            this.pos.y + (Math.random() - 0.5) * 2
+                        );
+                    }
+                }
+
+                this.updateParticles();
+                this.drawParticles();
+                this.drawCometHead(this.pos.x, this.pos.y);
+
+                this.lastMouse.x = this.mouse.x;
+                this.lastMouse.y = this.mouse.y;
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        /**
+         * STATIC BACKGROUND STARS (Just for Context)
+         */
+        function initStarfield() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const stars = [];
+            for(let i=0; i<400; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random()
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = '#050508';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = 'white';
+                stars.forEach(star => {
+                    ctx.globalAlpha = star.opacity;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            draw();
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                draw();
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initStarfield();
+            new CometCursor();
+        });
+
+    </script>
+</body>
+</html>

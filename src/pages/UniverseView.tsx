@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import NASASolarSystem from '../components/SolarSystem/NASASolarSystem';
 import UniverseQuote from '../components/UniverseQuote';
+import CometCursor from '../components/CometCursor';
 
 interface UniverseViewProps {
   toggleView: () => void;
@@ -35,6 +36,8 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
   const [cameraDistance, setCameraDistance] = useState(45);
 
   const handlePlanetClick = (route: string) => {
+    // Set hash to simplified before navigating to ensure proper state on refresh
+    window.location.hash = 'simplified';
     toggleView(); // Switch to simplified view
     navigate(route); // Navigate to the clicked planet's route
   };
@@ -57,6 +60,9 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#000' }}>
+      {/* Comet Cursor Effect */}
+      <CometCursor enabled={true} />
+      
       {/* NASA Solar System Scene */}
       <NASASolarSystem
         resetTrigger={resetTrigger}
@@ -88,6 +94,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
               <Box sx={{ position: 'relative' }}>
                 <Tooltip title="Information" arrow>
                   <IconButton
+                    data-comet-clickable="info-button"
                     onClick={() => setShowInfo(!showInfo)}
                     sx={{
                       color: '#93C5FD',
@@ -289,6 +296,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
 
               <Tooltip title="Home" arrow>
                 <IconButton
+                  data-comet-clickable="home-button"
                   onClick={() => navigate('/')}
                   sx={{
                     color: '#93C5FD',
@@ -366,6 +374,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
 
       {/* Simplified View Button - Bottom Right */}
       <Button
+        data-comet-clickable="simplified-view-button"
         variant="contained"
         onClick={toggleView}
         sx={{
@@ -397,6 +406,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
       {/* Reset View Button - Bottom Right */}
       <Tooltip title="Reset View" arrow>
         <IconButton
+          data-comet-clickable="reset-button"
           onClick={handleResetView}
           sx={{
             position: 'absolute',
@@ -446,6 +456,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
               }}
             >
               <Box
+                data-comet-clickable="solar-navigation-button"
                 onClick={() => setLegendCollapsed(!legendCollapsed)}
                 sx={{
                   p: 1.5,

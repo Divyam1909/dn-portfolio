@@ -324,7 +324,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     labelsContainer.style.left = '0';
     labelsContainer.style.width = '100%';
     labelsContainer.style.height = '100%';
-    labelsContainer.style.pointerEvents = 'none';
+    labelsContainer.style.pointerEvents = 'none'; // Container doesn't capture events, but labels will
     container.appendChild(labelsContainer);
 
     const labelElements: any[] = [];
@@ -351,6 +351,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
 
     planetLabels.forEach(labelData => {
       const labelDiv = document.createElement('div');
+      labelDiv.setAttribute('data-comet-clickable', 'planet-label');
       labelDiv.textContent = labelData.label;
       labelDiv.style.position = 'absolute';
       labelDiv.style.color = '#FFD60A';
@@ -365,6 +366,8 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       labelDiv.style.border = '1px solid rgba(255, 214, 10, 0.5)';
       labelDiv.style.backdropFilter = 'blur(5px)';
       labelDiv.style.whiteSpace = 'nowrap';
+      // Enable pointer events on the label itself so it can be hovered
+      labelDiv.style.pointerEvents = 'auto';
       labelsContainer.appendChild(labelDiv);
       labelElements.push({ div: labelDiv, planet: labelData.planet });
     });

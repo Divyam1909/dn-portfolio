@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, TextField, IconButton, Typography, useTheme } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 
+// Chatbot API URL - uses environment variable in production
+const CHATBOT_URL = process.env.REACT_APP_CHATBOT_URL || 'http://localhost:3001';
+
 interface Message {
   text: string;
   sender: 'user' | 'bot';
@@ -49,7 +52,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/chat', {
+      const response = await fetch(`${CHATBOT_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +71,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = { 
-        text: 'Sorry, I\'m having trouble connecting to the server. Please make sure the backend is running on port 3001.', 
+        text: 'Sorry, I\'m having trouble connecting right now. Please try again in a moment! 🤖', 
         sender: 'bot' 
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);

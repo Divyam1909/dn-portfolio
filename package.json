@@ -30,6 +30,7 @@
     "ajv-keywords": "^5.1.0",
     "axios": "^1.8.4",
     "framer-motion": "^12.5.0",
+    "globe.gl": "^2.45.0",
     "mongodb": "^6.20.0",
     "quill": "^2.0.3",
     "react": "19.2.0",

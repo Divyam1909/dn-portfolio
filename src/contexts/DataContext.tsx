@@ -65,8 +65,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         });
       }
     } catch (err: any) {
-      console.error('Error fetching portfolio data:', err);
-      setError(err.message || 'Failed to load portfolio data');
+      // Only log errors if backend is actually running but returned an error
+      // Connection refused means backend isn't running - this is expected in some scenarios
+      const isConnectionRefused = err.code === 'ERR_NETWORK' || 
+                                  err.message?.includes('ERR_CONNECTION_REFUSED') ||
+                                  err.message?.includes('Network Error');
+      
+      if (!isConnectionRefused) {
+        // Only log unexpected errors (not connection refused)
+        console.error('Error fetching portfolio data:', err);
+        setError(err.message || 'Failed to load portfolio data');
+      } else {
+        // Silently use fallback data when backend is not available
+        // This is expected behavior when backend server is not running
+        if (process.env.NODE_ENV === 'development') {
+          console.info('Backend server not available, using local portfolio data');
+        }
+      }
       // Keep using fallback data from portfolioData.ts
     } finally {
       setLoading(false);
