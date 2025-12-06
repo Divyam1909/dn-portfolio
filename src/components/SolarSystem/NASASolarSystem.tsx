@@ -148,7 +148,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    const planetLabels: any[] = [];
+    const planetLabels: { planet: THREE.Mesh; label: string; name: string; route: string }[] = [];
     const moonGroups: any[] = [];
 
     planetsData.forEach((data, index) => {
@@ -209,11 +209,12 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
         planetMesh.add(moonGroup);
       }
 
-        // Create text label (will be positioned in DOM)
+      // Create text label (will be positioned in DOM)
       planetLabels.push({
         planet: planetMesh,
         label: data.label,
-        name: data.name
+        name: data.name,
+        route: data.route
       });
 
       // Orbit line
@@ -327,10 +328,11 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     labelsContainer.style.pointerEvents = 'none'; // Container doesn't capture events, but labels will
     container.appendChild(labelsContainer);
 
-    const labelElements: any[] = [];
+    const labelElements: { div: HTMLDivElement; planet: THREE.Mesh; route?: string }[] = [];
     
     // Sun label (decreased size)
     const sunLabelDiv = document.createElement('div');
+    sunLabelDiv.setAttribute('data-comet-clickable', 'sun-label');
     sunLabelDiv.textContent = "Divyam's Portfolio";
     sunLabelDiv.style.position = 'absolute';
     sunLabelDiv.style.color = '#FFD60A';
@@ -346,6 +348,12 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     sunLabelDiv.style.backdropFilter = 'blur(8px)';
     sunLabelDiv.style.whiteSpace = 'nowrap';
     sunLabelDiv.style.boxShadow = '0 0 15px rgba(255, 214, 10, 0.5)';
+    sunLabelDiv.style.cursor = 'pointer';
+    sunLabelDiv.style.pointerEvents = 'auto';
+    sunLabelDiv.addEventListener('click', (event) => {
+      event.stopPropagation();
+      onSunClick();
+    });
     labelsContainer.appendChild(sunLabelDiv);
     labelElements.push({ div: sunLabelDiv, planet: sun });
 
@@ -366,10 +374,14 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       labelDiv.style.border = '1px solid rgba(255, 214, 10, 0.5)';
       labelDiv.style.backdropFilter = 'blur(5px)';
       labelDiv.style.whiteSpace = 'nowrap';
-      // Disable pointer events so clicks pass through to planets
-      labelDiv.style.pointerEvents = 'none';
+      labelDiv.style.pointerEvents = 'auto';
+      labelDiv.style.cursor = 'pointer';
+      labelDiv.addEventListener('click', (event) => {
+        event.stopPropagation();
+        onPlanetClick(labelData.route);
+      });
       labelsContainer.appendChild(labelDiv);
-      labelElements.push({ div: labelDiv, planet: labelData.planet });
+      labelElements.push({ div: labelDiv, planet: labelData.planet, route: labelData.route });
     });
 
     // Animation loop
@@ -445,7 +457,8 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       labelElements.forEach(labelData => {
         const pos = new THREE.Vector3();
         labelData.planet.getWorldPosition(pos);
-        const radius = labelData.planet.geometry?.parameters?.radius || 5;
+        const geometry = labelData.planet.geometry as THREE.SphereGeometry | undefined;
+        const radius = geometry?.parameters?.radius || 5;
         pos.y += radius + 0.8;
         pos.project(camera);
 

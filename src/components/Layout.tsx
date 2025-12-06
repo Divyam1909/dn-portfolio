@@ -33,7 +33,7 @@ import FlowingHeader from './FlowingHeader';
 interface LayoutProps {
   children: ReactNode;
   toggleTheme: () => void;
-  toggleView: () => void; // Add toggleView prop
+  toggleView: (options?: { preserveCurrentHash?: boolean }) => void; // Add toggleView prop
   setLastPathFromUniverseView: (path: string | null) => void;
   lastPathFromUniverseView: string | null;
 }
@@ -361,7 +361,7 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
       {/* Universe View Button - Bottom Right */}
       <Button
         variant="contained"
-        onClick={toggleView}
+        onClick={() => toggleView()}
         sx={{
           position: 'fixed',
           bottom: 20,

@@ -21,7 +21,7 @@ import UniverseQuote from '../components/UniverseQuote';
 import CometCursor from '../components/CometCursor';
 
 interface UniverseViewProps {
-  toggleView: () => void;
+  toggleView: (options?: { preserveCurrentHash?: boolean }) => void;
 }
 
 const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
@@ -35,9 +35,15 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
   const [cameraDistance, setCameraDistance] = useState(45);
 
+  const setHashWithoutHistory = (hash: string | null, pathOverride?: string) => {
+    const basePath = pathOverride ?? `${window.location.pathname}${window.location.search}`;
+    const url = hash ? `${basePath}#${hash}` : basePath;
+    window.history.replaceState(null, '', url);
+  };
+
   const handlePlanetClick = (route: string) => {
-    // Switch to simplified view
-    toggleView();
+    // Switch to simplified view without altering the current history entry
+    toggleView({ preserveCurrentHash: true });
     // Navigate to the route
     // Note: React Router handles hash fragments in routes (e.g., /resume#experience)
     navigate(route);
@@ -49,7 +55,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
       // Set view hash only if we're navigating to a route without a section hash
       // Routes with section hashes (like /resume#experience) will keep their hash
       if (pathname === route) {
-        window.location.hash = 'simplified';
+        setHashWithoutHistory('simplified', route);
       }
     }, 100);
   };
@@ -388,20 +394,23 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
       <Button
         data-comet-clickable="simplified-view-button"
         variant="contained"
-        onClick={toggleView}
+        onClick={() => toggleView()}
         sx={{
           position: 'absolute',
-          bottom: 20,
-          right: 20,
+          bottom: { xs: 16, sm: 20 },
+          right: { xs: 16, sm: 20 },
+          left: 'auto',
+          transform: 'none',
+          width: { xs: 'auto', sm: 'auto' },
           bgcolor: '#FFD60A',
           color: '#1a1a2e',
           fontFamily: '"Orbitron", monospace',
           fontWeight: 700,
-          fontSize: { xs: '0.75rem', sm: '0.85rem' },
+          fontSize: { xs: '0.7rem', sm: '0.85rem' },
           textTransform: 'uppercase',
           borderRadius: 2,
-          px: 3,
-          py: 1.5,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1, sm: 1.5 },
           boxShadow: '0 0 20px rgba(255, 214, 10, 0.6)',
           transition: 'all 0.3s ease',
           zIndex: 1000,
@@ -422,8 +431,10 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
           onClick={handleResetView}
           sx={{
             position: 'absolute',
-            bottom: 90, // Adjusted position to be above Simplified View button
-            right: 20,
+            bottom: { xs: 72, sm: 90 }, // Above Simplified View button
+            right: { xs: 16, sm: 20 },
+            left: 'auto',
+            transform: 'none',
             color: '#93C5FD',
             bgcolor: 'rgba(147, 197, 253, 0.1)',
             backdropFilter: 'blur(10px)',
@@ -456,13 +467,15 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
                 position: 'absolute',
                 bottom: 20,
                 left: 20,
+                transform: { xs: 'scale(0.85)', sm: 'none' },
+                transformOrigin: { xs: 'bottom left', sm: 'initial' },
                 zIndex: 1000,
                 background: 'linear-gradient(135deg, rgba(11, 61, 145, 0.85) 0%, rgba(0, 29, 61, 0.85) 100%)',
                 backdropFilter: 'blur(15px)',
                 border: '1px solid rgba(255, 214, 10, 0.3)',
                 borderRadius: 3,
-                maxWidth: { xs: '200px', sm: '300px' },
-                display: { xs: 'none', sm: 'block' },
+                maxWidth: { xs: '220px', sm: '300px' },
+                display: 'block',
                 overflow: 'hidden',
                 transition: 'all 0.3s ease'
               }}

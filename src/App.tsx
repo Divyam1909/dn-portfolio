@@ -31,6 +31,11 @@ const LoadingFallback = () => (
 );
 
 // Component that handles routing logic - must be inside Router
+type ToggleViewOptions = {
+  /** When toggling from universe -> simplified, keep the current history entry unchanged. */
+  preserveCurrentHash?: boolean;
+};
+
 const RoutingHandler: React.FC<{
   toggleTheme: () => void;
 }> = ({ toggleTheme }) => {
@@ -71,33 +76,49 @@ const RoutingHandler: React.FC<{
   const wasInSimplifiedViewRef = React.useRef<boolean>(!getInitialView());
   const isUpdatingHashRef = React.useRef<boolean>(false); // Track when we're programmatically updating hash
 
-  const toggleView = () => {
+  // Replace hash without creating a new history entry
+  const setHashWithoutHistory = React.useCallback(
+    (hash: string | null, pathOverride?: string) => {
+      const basePath = pathOverride ?? `${window.location.pathname}${window.location.search}`;
+      const url = hash ? `${basePath}#${hash}` : basePath;
+      window.history.replaceState(null, '', url);
+    },
+    []
+  );
+
+  const toggleView = (options?: ToggleViewOptions) => {
     setShowUniverseView(prev => {
       const newValue = !prev;
       wasInSimplifiedViewRef.current = !newValue;
       // Mark that we're updating hash programmatically to prevent hashchange handler from running
       isUpdatingHashRef.current = true;
-      // Update URL hash when view changes
-      window.location.hash = newValue ? 'universe' : 'simplified';
+      const skipHashUpdateOnCurrentEntry = options?.preserveCurrentHash && !newValue;
+      // Update URL hash when view changes, unless we want to preserve the current entry (universe -> simplified navigation)
+      if (!skipHashUpdateOnCurrentEntry) {
+        setHashWithoutHistory(newValue ? 'universe' : 'simplified');
+      }
       // Reset flag after a brief delay
       setTimeout(() => {
         isUpdatingHashRef.current = false;
       }, 50);
-      // If switching to universe view, navigate to root
-      if (newValue && location.pathname !== '/') {
-        navigate('/');
-        // Set hash after navigation
-        setTimeout(() => {
-          isUpdatingHashRef.current = true;
-          window.location.hash = 'universe';
-          setTimeout(() => {
-            isUpdatingHashRef.current = false;
-          }, 50);
-        }, 0);
-      }
       return newValue;
     });
   };
+
+  // Navigate to root after toggling to universe to avoid setState during render/updater
+  React.useEffect(() => {
+    if (showUniverseView && location.pathname !== '/') {
+      navigate('/', { replace: true });
+      // Set hash after navigation
+      setTimeout(() => {
+        isUpdatingHashRef.current = true;
+        setHashWithoutHistory('universe', '/');
+        setTimeout(() => {
+          isUpdatingHashRef.current = false;
+        }, 50);
+      }, 0);
+    }
+  }, [showUniverseView, location.pathname, navigate, setHashWithoutHistory]);
 
   // Update view when location or hash changes
   React.useEffect(() => {
@@ -123,7 +144,7 @@ const RoutingHandler: React.FC<{
       // Set hash when navigating to non-root routes to preserve state on refresh
       if (hash !== '#simplified' && !isUpdatingHashRef.current) {
         isUpdatingHashRef.current = true;
-        window.location.hash = 'simplified';
+        setHashWithoutHistory('simplified');
         setTimeout(() => {
           isUpdatingHashRef.current = false;
         }, 50);
@@ -134,7 +155,7 @@ const RoutingHandler: React.FC<{
       shouldShowUniverse = false;
       if (!isUpdatingHashRef.current) {
         isUpdatingHashRef.current = true;
-        window.location.hash = 'simplified';
+        setHashWithoutHistory('simplified');
         setTimeout(() => {
           isUpdatingHashRef.current = false;
         }, 50);
@@ -217,29 +238,34 @@ const RoutingHandler: React.FC<{
       
       <Routes>
         {/* Conditional rendering for Universe View or Portfolio */}
-        <Route path="/*" element={
-          showUniverseView ? (
-            <UniverseView toggleView={() => {
-              setLastPathFromUniverseView(null);
-              toggleView();
-            }} />
-          ) : (
-            <Layout 
-              toggleTheme={toggleTheme} 
-              toggleView={toggleView} 
-              setLastPathFromUniverseView={setLastPathFromUniverseView} 
-              lastPathFromUniverseView={lastPathFromUniverseView}
-            >
-              <Routes>
-                <Route index element={<Home />} />
-                <Route path="about" element={<About />} />
-                <Route path="resume" element={<Resume />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="contact" element={<Contact />} />
-              </Routes>
-            </Layout>
-          )
-        } />
+        <Route
+          path="/*"
+          element={
+            showUniverseView ? (
+              <UniverseView
+                toggleView={(options) => {
+                  setLastPathFromUniverseView(null);
+                  toggleView(options);
+                }}
+              />
+            ) : (
+              <Layout
+                toggleTheme={toggleTheme}
+                toggleView={toggleView}
+                setLastPathFromUniverseView={setLastPathFromUniverseView}
+                lastPathFromUniverseView={lastPathFromUniverseView}
+              >
+                <Routes>
+                  <Route index element={<Home />} />
+                  <Route path="about" element={<About />} />
+                  <Route path="resume" element={<Resume />} />
+                  <Route path="projects" element={<Projects />} />
+                  <Route path="contact" element={<Contact />} />
+                </Routes>
+              </Layout>
+            )
+          }
+        />
       </Routes>
     </>
   );

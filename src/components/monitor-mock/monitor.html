@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Portfolio</title>
+    <!-- Tailwind for layout utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Retro Font -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --terminal-green: #00ffbf;
+            --terminal-bg: #0c0c0c;
+            --case-color: #1f1f1f;
+            --highlight-key: #ff0055;
+            --highlight-text: #ff99cc;
+            --glow-shadow: 0 0 10px rgba(0, 255, 191, 0.5);
+        }
+
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            cursor: crosshair; /* Adds to the cyber feel */
+        }
+
+        /* --- LAYOUT CONTAINER --- */
+        .desk-setup {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            transform: scale(0.95);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .main-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .input-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 50px;
+            margin-top: 20px;
+        }
+
+        /* --- MONITOR STYLES --- */
+        .monitor-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .monitor-frame {
+            background: #222;
+            padding: 20px;
+            border-radius: 12px;
+            border: 3px solid #333;
+            box-shadow: 0 0 50px rgba(0, 255, 191, 0.1);
+            width: 750px;
+            height: 450px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .screen {
+            background-color: var(--terminal-bg);
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            padding: 30px;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            line-height: 1.4;
+            color: var(--terminal-green);
+            overflow-y: auto;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+            text-shadow: 0 0 4px rgba(0, 255, 191, 0.6); /* Restored Screen Glow */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        .screen::-webkit-scrollbar { width: 12px; }
+        .screen::-webkit-scrollbar-track { background: #000; }
+        .screen::-webkit-scrollbar-thumb { background: #1f4433; border: 2px solid #000; border-radius: 6px; }
+        .screen::-webkit-scrollbar-thumb:hover { background: var(--terminal-green); }
+
+        /* Scanline */
+        .screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            z-index: 2;
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 12px;
+            height: 24px;
+            background-color: var(--terminal-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: sub;
+            box-shadow: 0 0 8px var(--terminal-green);
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .monitor-stand {
+            width: 180px;
+            height: 60px;
+            background: linear-gradient(to bottom, #2a2a2a, #1a1a1a);
+            clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%);
+        }
+
+        .monitor-base {
+            width: 280px;
+            height: 15px;
+            background: #222;
+            border-radius: 4px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+            border-top: 1px solid #444;
+        }
+
+        .screen.off {
+            background-color: #050505;
+            box-shadow: inset 0 0 50px black;
+            text-shadow: none;
+        }
+        .screen.off * { display: none; }
+
+        /* --- CPU STYLES --- */
+        .cpu-tower {
+            width: 180px;
+            height: 420px;
+            background: #252525;
+            border-radius: 6px;
+            border: 2px solid #333;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 25px 0;
+            position: relative;
+            transform: perspective(1000px) rotateY(-5deg); 
+        }
+
+        .vent-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        .vent { width: 100%; height: 3px; background: #111; border-radius: 2px; }
+
+        .cd-drive {
+            width: 85%;
+            height: 35px;
+            border: 1px solid #111;
+            background: #1f1f1f;
+            margin-bottom: 30px;
+            border-radius: 2px;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+        }
+        .cd-button { width: 15px; height: 6px; background: #333; border-radius: 1px; }
+
+        .power-section {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding-bottom: 20px;
+        }
+
+        .power-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #444, #222);
+            border: 2px solid #111;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        .power-btn:active { transform: scale(0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
+        .power-icon { color: #666; font-size: 20px; }
+
+        .system-on .power-btn { border-color: var(--terminal-green); box-shadow: 0 0 20px rgba(0, 255, 191, 0.4); }
+        .system-on .power-icon { color: var(--terminal-green); text-shadow: 0 0 8px var(--terminal-green); }
+
+        /* --- KEYBOARD STYLES --- */
+        .keyboard-wrapper { transform: scale(1); }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 16px;
+            padding-bottom: 19px;
+            border-radius: 16px;
+            background-color: #666666;
+            background-image: linear-gradient(to bottom, #383838, #1f1f1f);
+            box-shadow:
+                0 10px 20px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            width: 650px;
+            user-select: none;
+        }
+
+        .row { display: flex; gap: 4px; justify-content: center; }
+
+        .key {
+            background-color: #1f1e1e;
+            border: 1px solid #111;
+            border-bottom: 3px solid #000;
+            border-radius: 6px;
+            min-width: 40px;
+            height: 40px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            /* Restored Glow Color */
+            color: var(--terminal-green);
+            text-shadow: 0 0 3px rgba(0, 255, 191, 0.5);
+            cursor: pointer;
+            transition: all 0.1s;
+            font-family: sans-serif;
+            position: relative;
+            top: 0;
+        }
+
+        .key:hover { background-color: #2a2a2a; box-shadow: 0 0 5px rgba(0, 255, 191, 0.3); }
+        
+        .key:active, .key.active {
+            top: 2px;
+            border-bottom: 1px solid #000;
+            background-color: #151515;
+            color: #fff;
+            text-shadow: 0 0 8px #fff;
+            box-shadow: inset 0 0 10px rgba(0, 255, 191, 0.2);
+        }
+
+        /* Hotkey Highlighting */
+        .key.hotkey {
+            border-color: #550022;
+            border-bottom-color: #330011;
+            color: var(--highlight-key);
+            text-shadow: 0 0 5px var(--highlight-key);
+        }
+        .key.hotkey:active, .key.hotkey.active {
+            color: #fff;
+            background: var(--highlight-key);
+            box-shadow: 0 0 15px var(--highlight-key);
+        }
+
+        .space-key { flex: 5; min-width: 200px; }
+        .shift-key { flex: 2; }
+        .enter-key, .caps-key, .tab-key { flex: 1.5; }
+        .backspace-key { flex: 1.5; }
+
+        /* --- MOUSE STYLES --- */
+        .mouse-container {
+            width: 90px;
+            height: 140px;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 45px 45px 50px 50px;
+            border: 1px solid #000;
+            box-shadow: 
+                0 10px 20px rgba(0,0,0,0.5),
+                inset 1px 1px 1px rgba(255,255,255,0.1);
+            position: relative;
+            margin-top: 50px;
+        }
+
+        .mouse-top {
+            height: 50%;
+            width: 100%;
+            border-bottom: 1px solid #111;
+            border-radius: 45px 45px 5px 5px;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .mouse-btn {
+            flex: 1;
+            background: linear-gradient(to bottom, #333, #2a2a2a);
+            cursor: pointer;
+            transition: background 0.1s;
+            position: relative;
+        }
+        
+        .mouse-btn:hover { background: #383838; }
+        .mouse-btn:active, .mouse-btn.active { background: #222; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        
+        .mouse-btn.left { border-right: 1px solid #111; }
+
+        /* Scroll Wheel */
+        .scroll-wheel-zone {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 34px;
+            background: #0f0f0f;
+            border-radius: 8px;
+            z-index: 5;
+            padding: 2px;
+        }
+
+        .scroll-wheel {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom, #1a1a1a, #1a1a1a 3px, #333 4px);
+            border-radius: 6px;
+            cursor: ns-resize;
+            border: 1px solid #000;
+            transition: transform 0.1s;
+        }
+        .scroll-wheel:active, .scroll-wheel.active { transform: scale(0.95); background: #222; }
+
+        .mouse-body {
+            height: 50%;
+            border-radius: 5px 5px 50px 50px;
+        }
+        
+        .mouse-logo {
+            position: absolute;
+            bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 20px; opacity: 0.2; background: white;
+            mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>') no-repeat center;
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>') no-repeat center;
+        }
+
+        /* --- Typography Classes --- */
+        .title-centered {
+            text-align: center;
+            font-size: 0.8em;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            color: #555;
+            text-transform: uppercase;
+        }
+        
+        .header-section {
+            color: black;
+            background: var(--terminal-green);
+            font-weight: bold;
+            display: inline-block;
+            padding: 2px 8px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px var(--terminal-green);
+        }
+        .highlight-text { color: white; text-shadow: 0 0 5px white; }
+        .accent-text { color: var(--highlight-text); text-shadow: 0 0 5px var(--highlight-key); }
+        .instruction-line { margin-top: 30px; border-top: 1px dashed #333; padding-top: 10px; color: #555; font-size: 0.8em; }
+
+    </style>
+</head>
+<body class="system-on">
+
+    <div class="desk-setup">
+        
+        <div class="main-row">
+            <!-- Monitor -->
+            <div class="monitor-group">
+                <div class="monitor-frame">
+                    <div class="screen" id="display">
+                        <span id="text-content"></span><span class="cursor"></span>
+                    </div>
+                </div>
+                <div class="monitor-stand"></div>
+                <div class="monitor-base"></div>
+            </div>
+
+            <!-- CPU Tower -->
+            <div class="cpu-tower">
+                <div class="vent-grid">
+                    <div class="vent"></div>
+                    <div class="vent"></div>
+                    <div class="vent"></div>
+                </div>
+                <div class="cd-drive"><div class="cd-button"></div></div>
+                <div class="vent-grid">
+                    <div class="vent"></div>
+                    <div class="vent"></div>
+                    <div class="vent"></div>
+                    <div class="vent"></div>
+                </div>
+                <div class="power-section">
+                    <div class="power-btn" id="powerBtn" onclick="togglePower()">
+                        <div class="power-icon">⏻</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <!-- Keyboard -->
+            <div class="keyboard-wrapper">
+                <div class="keyboard" id="virtual-keyboard">
+                    <div class="row">
+                        <div class="key" data-key="Escape">ESC</div>
+                        <div class="key" data-key="F1">F1</div>
+                        <div class="key" data-key="F2">F2</div>
+                        <div class="key" data-key="F3">F3</div>
+                        <div class="key" data-key="F4">F4</div>
+                        <div class="key" data-key="F5">F5</div>
+                        <div class="key" data-key="F6">F6</div>
+                        <div class="key" data-key="F7">F7</div>
+                        <div class="key" data-key="F8">F8</div>
+                        <div class="key" data-key="F9">F9</div>
+                        <div class="key" data-key="F10">F10</div>
+                        <div class="key" data-key="F11">F11</div>
+                        <div class="key" data-key="F12">F12</div>
+                    </div>
+                    <div class="row">
+                        <div class="key" data-key="`">`</div>
+                        <div class="key" data-key="1">1</div>
+                        <div class="key" data-key="2">2</div>
+                        <div class="key" data-key="3">3</div>
+                        <div class="key" data-key="4">4</div>
+                        <div class="key" data-key="5">5</div>
+                        <div class="key" data-key="6">6</div>
+                        <div class="key" data-key="7">7</div>
+                        <div class="key" data-key="8">8</div>
+                        <div class="key" data-key="9">9</div>
+                        <div class="key" data-key="0">0</div>
+                        <div class="key" data-key="-">-</div>
+                        <div class="key" data-key="=">=</div>
+                        <div class="key backspace-key" data-key="Backspace">DEL</div>
+                    </div>
+                    <div class="row">
+                        <div class="key tab-key" data-key="Tab">TAB</div>
+                        <div class="key" data-key="q">Q</div>
+                        <div class="key hotkey" data-key="w" title="Who Am I?">W</div>
+                        <div class="key" data-key="e">E</div>
+                        <div class="key" data-key="r">R</div>
+                        <div class="key" data-key="t">T</div>
+                        <div class="key" data-key="y">Y</div>
+                        <div class="key" data-key="u">U</div>
+                        <div class="key" data-key="i">I</div>
+                        <div class="key" data-key="o">O</div>
+                        <div class="key hotkey" data-key="p" title="My Purpose">P</div>
+                        <div class="key" data-key="[">[</div>
+                        <div class="key" data-key="]">]</div>
+                        <div class="key" data-key="\">\</div>
+                    </div>
+                    <div class="row">
+                        <div class="key caps-key" data-key="CapsLock">CAPS</div>
+                        <div class="key" data-key="a">A</div>
+                        <div class="key" data-key="s">S</div>
+                        <div class="key" data-key="d">D</div>
+                        <div class="key" data-key="f">F</div>
+                        <div class="key" data-key="g">G</div>
+                        <div class="key hotkey" data-key="h" title="My Passions">H</div>
+                        <div class="key" data-key="j">J</div>
+                        <div class="key" data-key="k">K</div>
+                        <div class="key" data-key="l">L</div>
+                        <div class="key" data-key=";">;</div>
+                        <div class="key" data-key="'">'</div>
+                        <div class="key enter-key" data-key="Enter">ENTER</div>
+                    </div>
+                    <div class="row">
+                        <div class="key shift-key" data-key="Shift">SHIFT</div>
+                        <div class="key" data-key="z">Z</div>
+                        <div class="key" data-key="x">X</div>
+                        <div class="key hotkey" data-key="c" title="Creative Philosophy">C</div>
+                        <div class="key" data-key="v">V</div>
+                        <div class="key" data-key="b">B</div>
+                        <div class="key" data-key="n">N</div>
+                        <div class="key" data-key="m">M</div>
+                        <div class="key" data-key=",">,</div>
+                        <div class="key" data-key=".">.</div>
+                        <div class="key" data-key="/">/</div>
+                        <div class="key shift-key" data-key="Shift">SHIFT</div>
+                    </div>
+                    <div class="row">
+                        <div class="key" data-key="Control">CTRL</div>
+                        <div class="key" data-key="Alt">ALT</div>
+                        <div class="key space-key" data-key=" "></div>
+                        <div class="key" data-key="Alt">ALT</div>
+                        <div class="key" data-key="Control">CTRL</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mouse -->
+            <div class="mouse-container">
+                <div class="mouse-top">
+                    <div class="mouse-btn left" id="mouseLeft"></div>
+                    <div class="scroll-wheel-zone">
+                        <div class="scroll-wheel" id="scrollWheel"></div>
+                    </div>
+                    <div class="mouse-btn right" id="mouseRight"></div>
+                </div>
+                <div class="mouse-body">
+                    <div class="mouse-logo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const textContent = document.getElementById('text-content');
+        const body = document.body;
+        const keys = document.querySelectorAll('.key');
+        const mouseLeft = document.getElementById('mouseLeft');
+        const mouseRight = document.getElementById('mouseRight');
+        const scrollWheel = document.getElementById('scrollWheel');
+
+        let isPowerOn = true;
+        let clickOrderIndex = 0;
+        const clickOrder = ['w', 'p', 'c', 'h'];
+
+        // Content Sections
+        const content = {
+            intro: `<div class="title-centered">about me</div>
+<div class="instruction-line">
+  COMMANDS: [ <span class="accent-text">W</span> ] WHO  [ <span class="accent-text">P</span> ] PURPOSE  [ <span class="accent-text">C</span> ] CREATIVE  [ <span class="accent-text">H</span> ] PASSIONS
+</div>
+<br>>_ `,
+            
+            w: `<br><span class="header-section">WHO AM I?</span>
+I am a <span class="highlight-text">Full Stack Developer</span> & UI Designer.
+I specialize in building immersive web experiences that feel alive.
+<br>>_ `,
+
+            p: `<br><span class="header-section">MY PURPOSE</span>
+To humanize technology. I build tools that are intuitive, robust, and delightful.
+My goal is to simplify the complex and make the web a more beautiful place.
+<br>>_ `,
+
+            c: `<br><span class="header-section">CREATIVE PHILOSOPHY</span>
+"Form follows function, but form implies values."
+1. <span class="accent-text">Simplicity</span> is the ultimate sophistication.
+2. <span class="accent-text">Performance</span> is a feature, not an afterthought.
+3. <span class="accent-text">Accessibility</span> ensures everyone is invited.
+<br>>_ `,
+
+            h: `<br><span class="header-section">PASSIONS</span>
+> <span class="highlight-text">Coding</span> (React, WebGL, Node.js)
+> <span class="highlight-text">Gaming</span> (RPG, Strategy)
+> <span class="highlight-text">Coffee</span> (Dark Roast)
+<br>>_ `
+        };
+
+        // Boot Sequence
+        function bootSequence() {
+            textContent.innerHTML = "";
+            clickOrderIndex = 0; // Reset order on reboot
+            let dots = 0;
+            const bootInterval = setInterval(() => {
+                textContent.innerHTML = "> BOOTING SYSTEM" + ".".repeat(dots);
+                dots = (dots + 1) % 4;
+            }, 200);
+
+            setTimeout(() => {
+                clearInterval(bootInterval);
+                textContent.innerHTML = content.intro;
+            }, 1500);
+        }
+
+        window.addEventListener('load', bootSequence);
+
+        // --- HARDWARE MOUSE & KEYBOARD INTEGRATION ---
+
+        // 1. Mouse Scroll (Hardware & Virtual)
+        function handleScroll(direction) {
+            if (!isPowerOn) return;
+            const amount = direction * 50;
+            display.scrollTop += amount;
+            
+            // Visual feedback on virtual wheel
+            scrollWheel.style.transform = `translateY(${direction * 2}px) scale(0.95)`;
+            setTimeout(() => {
+                 scrollWheel.style.transform = `translateY(0) scale(1)`;
+            }, 100);
+        }
+
+        // Listen to real mouse wheel
+        window.addEventListener('wheel', (e) => {
+            const direction = e.deltaY > 0 ? 1 : -1;
+            handleScroll(direction);
+        });
+
+        // 2. Mouse Clicks (Hardware)
+        window.addEventListener('mousedown', (e) => {
+            if (!isPowerOn) return;
+            
+            // Determine if left or right click
+            if (e.button === 0) { // Left Click
+                animateMouseBtn(mouseLeft);
+                // Execute "Next Section" logic
+                const keyToType = clickOrder[clickOrderIndex];
+                textContent.innerHTML += content[keyToType];
+                
+                // Highlight the corresponding virtual key temporarily
+                const keyEl = document.querySelector(`.key[data-key="${keyToType}"]`);
+                if(keyEl) {
+                    keyEl.classList.add('active');
+                    setTimeout(() => keyEl.classList.remove('active'), 200);
+                }
+
+                // Cycle to next
+                clickOrderIndex = (clickOrderIndex + 1) % clickOrder.length;
+                scrollToBottom();
+
+            } else if (e.button === 2) { // Right Click
+                animateMouseBtn(mouseRight);
+                // Execute "Clear" logic
+                textContent.innerHTML = content.intro;
+                clickOrderIndex = 0; // Reset sequence
+            }
+        });
+
+        // Disable Context Menu for Right Click to work as a game mechanic
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        function animateMouseBtn(element) {
+            element.classList.add('active');
+            setTimeout(() => element.classList.remove('active'), 150);
+        }
+
+        // 3. Keyboard Handling
+        document.addEventListener('keydown', (e) => {
+            if(!isPowerOn) return;
+            const keyEl = findKeyElement(e.key);
+            if (keyEl) keyEl.classList.add('active');
+            
+            if(['ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
+            handleInput(null, e.key);
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const keyEl = findKeyElement(e.key);
+            if (keyEl) keyEl.classList.remove('active');
+        });
+
+        // Virtual Click Handling (Maps back to input logic)
+        keys.forEach(key => {
+            key.addEventListener('mousedown', (e) => {
+                e.stopPropagation(); // Prevent triggering the global window click logic
+                if(!isPowerOn) return;
+                handleInput(key.innerText, key.getAttribute('data-key'));
+            });
+        });
+
+        // --- CORE LOGIC ---
+
+        function findKeyElement(eventKey) {
+            const selector = `.key[data-key="${eventKey}"]`;
+            let el = document.querySelector(selector);
+            if (!el && eventKey.length === 1) el = document.querySelector(`.key[data-key="${eventKey.toLowerCase()}"]`);
+            return el;
+        }
+
+        function handleInput(virtualText, actionKey) {
+            if (!isPowerOn) return;
+
+            const lowerKey = actionKey.toLowerCase();
+            
+            // Check if it's one of our content keys
+            if (content[lowerKey]) {
+                textContent.innerHTML += content[lowerKey];
+                // Sync the click index to whatever was just pressed so the next click follows logically
+                const foundIndex = clickOrder.indexOf(lowerKey);
+                if (foundIndex !== -1) {
+                    clickOrderIndex = (foundIndex + 1) % clickOrder.length;
+                }
+                scrollToBottom();
+                return;
+            }
+
+            // Normal Typing
+            if (actionKey === 'Backspace') {
+                const current = textContent.innerHTML;
+                if(!current.endsWith('>_ ')) { 
+                    textContent.innerHTML = current.slice(0, -1);
+                }
+            } 
+            else if (actionKey === 'Enter') {
+                textContent.innerHTML += '<br>>_ ';
+            } 
+            else if (actionKey === 'Tab') {
+                textContent.innerHTML += '&nbsp;&nbsp;';
+            } 
+            else if (actionKey.length === 1) {
+                textContent.innerHTML += actionKey;
+            }
+            
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            display.scrollTop = display.scrollHeight;
+        }
+
+        function togglePower() {
+            isPowerOn = !isPowerOn;
+            if (isPowerOn) {
+                body.classList.add('system-on');
+                display.classList.remove('off');
+                bootSequence();
+            } else {
+                body.classList.remove('system-on');
+                display.classList.add('off');
+            }
+        }
+    </script>
+</body>
+</html>

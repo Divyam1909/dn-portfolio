@@ -594,7 +594,7 @@ const PhoneWrapper = styled.div`
     border: 2px solid rgb(40, 40, 40);
     padding: 7px;
     position: relative;
-    box-shadow: 2px 5px 15px rgba(0, 0, 0, 0.486);
+    box-shadow: 2px 5px 15px rgba(212, 175, 55, 0.9);
   }
 
   .card-int {
