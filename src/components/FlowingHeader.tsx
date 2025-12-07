@@ -10,13 +10,10 @@ import {
   useMediaQuery,
   Container,
 } from '@mui/material';
-import {
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
-  Menu as MenuIcon,
-} from '@mui/icons-material';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, LayoutGroup } from 'framer-motion';
+import ThemeSwitch from './toggle';
 
 interface FlowingHeaderProps {
   toggleTheme: () => void;
@@ -122,104 +119,118 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
 
           {/* Desktop Navigation */}
           {!isMobile && (
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 1,
-                alignItems: 'center',
-                background: isDark
-                  ? 'rgba(255, 255, 255, 0.03)'
-                  : 'rgba(0, 0, 0, 0.03)',
-                borderRadius: '50px',
-                p: 0.5,
-                border: `1px solid ${
-                  isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
-                }`,
-              }}
-            >
-              {navItems.map((item, index) => (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <Button
-                    component={RouterLink}
-                    to={item.path}
-                    sx={{
-                      color: isActive(item.path)
-                        ? '#fff'
-                        : theme.palette.text.primary,
-                      fontWeight: isActive(item.path) ? 700 : 500,
-                      px: 3,
-                      py: 1,
-                      borderRadius: '50px',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      background: isActive(item.path)
-                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                        : 'transparent',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: isDark
-                          ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
-                          : 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                      },
-                      '&:hover::before': {
-                        opacity: isActive(item.path) ? 0 : 1,
-                      },
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: isActive(item.path)
-                          ? '0 8px 16px rgba(102, 126, 234, 0.4)'
-                          : 'none',
-                      },
-                    }}
+            <LayoutGroup>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  alignItems: 'center',
+                  background: isDark
+                    ? 'rgba(255, 255, 255, 0.03)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                  borderRadius: '50px',
+                  p: 0.5,
+                  border: `1px solid ${
+                    isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'
+                  }`,
+                }}
+              >
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.path}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    {item.label}
-                  </Button>
-                </motion.div>
-              ))}
-            </Box>
+                    <Button
+                      component={RouterLink}
+                      to={item.path}
+                      sx={{
+                        color: isActive(item.path)
+                          ? '#fff'
+                          : theme.palette.text.primary,
+                        fontWeight: isActive(item.path) ? 700 : 500,
+                        px: 3,
+                        py: 1,
+                        borderRadius: '50px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'transparent',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: isDark
+                            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                            : 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+                          opacity: 0,
+                          transition: 'opacity 0.3s ease',
+                        },
+                        '&:hover::before': {
+                          opacity: isActive(item.path) ? 0 : 1,
+                        },
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: isActive(item.path)
+                            ? '0 8px 16px rgba(102, 126, 234, 0.3)'
+                            : 'none',
+                        },
+                      }}
+                    >
+                      {isActive(item.path) && (
+                        <motion.span
+                          layoutId="navBubble"
+                          layout
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: '50px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            boxShadow: '0 8px 18px rgba(102, 126, 234, 0.35)',
+                            zIndex: 0,
+                          }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 260,
+                            damping: 28,
+                            mass: 0.8,
+                          }}
+                        />
+                      )}
+                      <Box component="span" sx={{ position: 'relative', zIndex: 1 }}>
+                        {item.label}
+                      </Box>
+                    </Button>
+                  </motion.div>
+                ))}
+              </Box>
+            </LayoutGroup>
           )}
 
           {/* Right Actions */}
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 1.25, alignItems: 'center' }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <IconButton
-                onClick={toggleTheme}
+              <Box
                 sx={{
-                  color: theme.palette.text.primary,
-                  bgcolor: isDark
-                    ? 'rgba(255, 255, 255, 0.05)'
-                    : 'rgba(0, 0, 0, 0.05)',
-                  border: `1px solid ${
-                    isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                  }`,
-                  '&:hover': {
-                    bgcolor: isDark
-                      ? 'rgba(255, 255, 255, 0.1)'
-                      : 'rgba(0, 0, 0, 0.1)',
-                    transform: 'rotate(180deg)',
-                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                  },
+                  transform: { xs: 'scale(0.38)', sm: 'scale(0.48)', md: 'scale(0.54)' },
+                  transformOrigin: 'center',
                 }}
               >
-                {isDark ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
+                <ThemeSwitch
+                  checked={isDark}
+                  onChange={() => toggleTheme()}
+                  size={7}
+                  ariaLabel="Toggle light/dark theme"
+                />
+              </Box>
             </motion.div>
 
             {isMobile && (

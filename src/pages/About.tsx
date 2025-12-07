@@ -86,7 +86,7 @@ const monitorStyles = `
   border-radius: 4px;
   padding: 18px;
   font-family: 'VT323', monospace;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.45;
   color: var(--terminal-green);
   overflow-y: auto;
@@ -97,6 +97,27 @@ const monitorStyles = `
   word-wrap: break-word;
   scroll-behavior: smooth;
   box-sizing: border-box;
+}
+
+.monitor-mock .command-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #0b0b0b;
+  padding: 10px 12px;
+  margin: -18px -18px 12px -18px;
+  border-bottom: 1px solid rgba(102, 229, 255, 0.5);
+  box-shadow:
+    0 6px 12px rgba(0,0,0,0.45),
+    0 0 12px rgba(0,0,0,0.35);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.monitor-mock .command-sticky .accent-text {
+  color: var(--highlight-text);
+  text-shadow: 0 0 5px var(--highlight-key);
 }
 
 .monitor-mock .screen::-webkit-scrollbar { width: 12px; }
@@ -172,14 +193,17 @@ const monitorStyles = `
   border-radius: 50%;
   border: 2px solid #111;
   background: radial-gradient(circle at 30% 30%, #444, #222);
-  color: #a5ffe4;
+  color: var(--terminal-green);
   font-weight: 700;
   font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 0 14px rgba(53, 255, 181, 0.35), 0 4px 8px rgba(0,0,0,0.4);
+  box-shadow:
+    0 0 14px rgba(53, 255, 181, 0.35),
+    0 4px 8px rgba(0,0,0,0.4),
+    0 0 22px rgba(53, 255, 181, 0.28);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
@@ -187,6 +211,14 @@ const monitorStyles = `
   transform: translateY(-1px);
   box-shadow: 0 0 18px rgba(102, 229, 255, 0.5);
   border-color: #66e5ff;
+}
+
+.monitor-mock.system-on .info-btn {
+  border-color: var(--terminal-green);
+  box-shadow:
+    0 0 18px rgba(53, 255, 181, 0.5),
+    0 4px 10px rgba(0,0,0,0.45);
+  color: var(--terminal-green);
 }
 
 .monitor-mock .info-panel {
@@ -260,14 +292,14 @@ const monitorStyles = `
 .monitor-mock .cd-button { width: 12px; height: 6px; background: #333; border-radius: 1px; }
 
 .monitor-mock .power-section {
-  margin-top: auto;
+  flex: 1;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding-bottom: 20px;
+  padding-bottom: 0;
 }
 
 .monitor-mock .power-btn {
@@ -282,10 +314,21 @@ const monitorStyles = `
   align-items: center;
   transition: all 0.2s;
   margin-bottom: 0;
-  box-shadow: 0 0 14px rgba(53, 255, 181, 0.45), 0 4px 8px rgba(0,0,0,0.4);
+  box-shadow:
+    0 0 14px rgba(53, 255, 181, 0.45),
+    0 4px 8px rgba(0,0,0,0.4),
+    0 0 26px rgba(53, 255, 181, 0.32);
 }
 .monitor-mock .power-btn:active { transform: scale(0.95); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
-.monitor-mock .power-icon { color: #666; font-size: 20px; }
+.monitor-mock .power-icon {
+  color: #666;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
 
 .monitor-mock.system-on .power-btn { border-color: var(--terminal-green); box-shadow: 0 0 20px rgba(0, 255, 191, 0.4); }
 .monitor-mock.system-on .power-icon { color: var(--terminal-green); text-shadow: 0 0 8px var(--terminal-green); }
@@ -312,6 +355,27 @@ const monitorStyles = `
 .monitor-mock .row { display: flex; gap: 4px; justify-content: center; }
 
 .monitor-mock .row.top-row .key { min-width: 40px; }
+.monitor-mock .sound-key {
+  min-width: 68px;
+  padding: 0 8px;
+  letter-spacing: 0.5px;
+}
+.monitor-mock .sound-key::after {
+  content: '';
+  display: inline-block;
+  margin-left: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #444;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4) inset;
+}
+.monitor-mock .sound-key.active::after {
+  background: var(--terminal-green);
+  box-shadow:
+    0 0 6px var(--terminal-green),
+    0 0 12px rgba(53, 255, 181, 0.5);
+}
 
 .monitor-mock .key {
   background-color: #1f1e1e;
@@ -332,6 +396,9 @@ const monitorStyles = `
   font-family: sans-serif;
   position: relative;
   top: 0;
+  box-shadow:
+    0 0 6px rgba(0, 255, 191, 0.18),
+    0 6px 12px rgba(0, 0, 0, 0.35);
 }
 
 .monitor-mock .key:hover { background-color: #2a2a2a; box-shadow: 0 0 5px rgba(0, 255, 191, 0.3); }
@@ -342,19 +409,28 @@ const monitorStyles = `
   background-color: #151515;
   color: #fff;
   text-shadow: 0 0 8px #fff;
-  box-shadow: inset 0 0 10px rgba(0, 255, 191, 0.2);
+  box-shadow:
+    inset 0 0 10px rgba(0, 255, 191, 0.2),
+    0 0 12px rgba(102, 229, 255, 0.35);
 }
 
 .monitor-mock .key.hotkey {
   border-color: #550022;
   border-bottom-color: #330011;
   color: var(--highlight-key);
-  text-shadow: 0 0 5px var(--highlight-key);
+  text-shadow: 0 0 9px var(--highlight-key), 0 0 14px rgba(102, 229, 255, 0.45);
+  box-shadow:
+    0 0 10px rgba(102, 229, 255, 0.4),
+    0 0 16px rgba(53, 255, 181, 0.35),
+    0 6px 12px rgba(0, 0, 0, 0.35);
 }
 .monitor-mock .key.hotkey:active, .monitor-mock .key.hotkey.active {
   color: #fff;
   background: var(--highlight-key);
-  box-shadow: 0 0 15px var(--highlight-key);
+  box-shadow:
+    0 0 15px var(--highlight-key),
+    0 0 22px rgba(102, 229, 255, 0.45),
+    0 0 28px rgba(53, 255, 181, 0.5);
 }
 
 .monitor-mock .space-key { flex: 4.8; min-width: 220px; }
@@ -433,9 +509,16 @@ const monitorStyles = `
 .monitor-mock .mouse-logo {
   position: absolute;
   bottom: 20px; left: 50%; transform: translateX(-50%);
-  width: 20px; height: 20px; opacity: 0.2; background: white;
-  mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>') no-repeat center;
-  -webkit-mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>') no-repeat center;
+  width: 40px; height: 22px;
+  opacity: 0.9;
+  background: var(--terminal-green);
+  box-shadow:
+    0 0 10px rgba(53, 255, 181, 0.55),
+    0 0 18px rgba(102, 229, 255, 0.35);
+  mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="18" text-anchor="middle" font-family="VT323" font-size="18" font-weight="700" letter-spacing="2" fill="white">DN</text></svg>') no-repeat center;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="18" text-anchor="middle" font-family="VT323" font-size="18" font-weight="700" letter-spacing="2" fill="white">DN</text></svg>') no-repeat center;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .monitor-mock .mobile-controls {
@@ -444,6 +527,8 @@ const monitorStyles = `
   width: 100%;
   max-width: 640px;
   display: none;
+  padding: 0 -px;
+  box-sizing: border-box;
 }
 
 .monitor-mock .mobile-controls .btn-grid {
@@ -565,10 +650,8 @@ const monitorStyles = `
 `;
 
 const monitorContent: Record<string, string> = {
-  intro: `<div class="title-centered">about me</div>
-<div class="instruction-line">
-COMMANDS:[ <span class="accent-text">W</span> ] WHO  [ <span class="accent-text">P</span> ] PURPOSE  [ <span class="accent-text">X</span> ] CREATIVE  [ <span class="accent-text">H</span> ] PASSIONS
-</div>
+  intro: `<div class="title-centered">About Me !!</div>
+<div class="instruction-line">Type a command (W / P / X / H) to explore.</div>
 >_ `,
   w: `<br><span class="header-section">WHO AM I?</span>
 I am a <span class="highlight-text">Full Stack Developer</span> & UI Designer.
@@ -591,9 +674,93 @@ My goal is to simplify the complex and make the web a more beautiful place.
 <br>>_ `,
 };
 
+type TypewriterOptions = {
+  append?: boolean;
+  onDone?: () => void;
+  onStart?: () => void;
+};
+
+const useTypewriter = (speed = 14) => {
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const tokenize = (html: string) => {
+    const tokens: string[] = [];
+    let i = 0;
+    while (i < html.length) {
+      if (html[i] === '<') {
+        const close = html.indexOf('>', i);
+        if (close === -1) break;
+        tokens.push(html.slice(i, close + 1));
+        i = close + 1;
+      } else {
+        tokens.push(html[i]);
+        i += 1;
+      }
+    }
+    return tokens;
+  };
+
+  const type = (el: HTMLElement | null, html: string, opts: TypewriterOptions = {}) => {
+    if (!el) return;
+    clearTimer();
+    const tokens = tokenize(html);
+    let idx = 0;
+    const base = opts.append ? el.innerHTML : '';
+    el.innerHTML = base;
+
+    opts.onStart?.();
+
+    const step = () => {
+      if (!el) return;
+      if (idx >= tokens.length) {
+        clearTimer();
+        opts.onDone?.();
+        return;
+      }
+      el.innerHTML += tokens[idx];
+      idx += 1;
+      timerRef.current = window.setTimeout(step, speed);
+    };
+
+    step();
+  };
+
+  useEffect(() => clearTimer, []);
+
+  return { type };
+};
+
 const MonitorMock: React.FC = () => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const { type } = useTypewriter(12);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Turn the CPU on only when the About section is visibly on screen
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setIsActive(entry.isIntersecting && entry.intersectionRatio > 0.25);
+      },
+      { threshold: [0, 0.1, 0.2, 0.25, 0.35, 0.5] }
+    );
+
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -601,12 +768,14 @@ const MonitorMock: React.FC = () => {
 
     const display = root.querySelector('#display') as HTMLElement | null;
     const textContent = root.querySelector('#text-content') as HTMLElement | null;
-    const keys = Array.from(root.querySelectorAll('.key')) as HTMLElement[];
+    const keys = Array.from(root.querySelectorAll('.key'))
+      .filter((el) => el.id !== 'soundToggle') as HTMLElement[];
     const mouseLeft = root.querySelector('#mouseLeft') as HTMLElement | null;
     const mouseRight = root.querySelector('#mouseRight') as HTMLElement | null;
     const scrollWheel = root.querySelector('#scrollWheel') as HTMLElement | null;
     const powerBtn = root.querySelector('#powerBtn') as HTMLElement | null;
     const infoBtn = root.querySelector('#infoBtn') as HTMLElement | null;
+    const soundToggle = root.querySelector('#soundToggle') as HTMLElement | null;
     const mobileBtnW = root.querySelector('#mobileBtnW') as HTMLElement | null;
     const mobileBtnP = root.querySelector('#mobileBtnP') as HTMLElement | null;
     const mobileBtnX = root.querySelector('#mobileBtnX') as HTMLElement | null;
@@ -614,12 +783,44 @@ const MonitorMock: React.FC = () => {
     const mobileBtnClear = root.querySelector('#mobileBtnClear') as HTMLElement | null;
     const mobileBtnPower = root.querySelector('#mobileBtnPower') as HTMLElement | null;
 
-    let isPowerOn = true;
+    let isPowerOn = isActive;
     let clickOrderIndex = 0;
     const clickOrder = ['w', 'p', 'x', 'h'];
 
     let bootInterval: number | null = null;
     let bootTimeout: number | null = null;
+
+    const ensureAudio = () => {
+      if (audioCtxRef.current) return audioCtxRef.current;
+      const Ctor = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctor) return null;
+      audioCtxRef.current = new Ctor();
+      return audioCtxRef.current;
+    };
+
+    const playTone = (frequency: number, duration = 0.08, volume = 0.08) => {
+      if (!soundEnabled) return;
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.frequency.value = frequency;
+      gain.gain.value = volume;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + duration);
+    };
+
+    const playKeyClick = () => playTone(3200, 0.03, 0.06);
+    const playOutputBeep = () => playTone(420, 0.08, 0.08);
+
+    const clearBootTimers = () => {
+      if (bootInterval) clearInterval(bootInterval);
+      if (bootTimeout) clearTimeout(bootTimeout);
+      bootInterval = null;
+      bootTimeout = null;
+    };
 
     const scrollToBottom = () => {
       if (!display) return;
@@ -640,8 +841,35 @@ const MonitorMock: React.FC = () => {
 
       bootTimeout = window.setTimeout(() => {
         if (bootInterval) clearInterval(bootInterval);
-        if (textContent) textContent.innerHTML = monitorContent.intro;
+        if (textContent) {
+          type(textContent, monitorContent.intro, {
+            append: false,
+            onDone: scrollToBottom,
+            onStart: () => {
+              playOutputBeep();
+              scrollToBottom();
+            },
+          });
+        }
       }, 1500);
+    };
+
+    const applyOffState = () => {
+      clearBootTimers();
+      root.classList.remove('system-on');
+      display?.classList.add('off');
+      if (textContent) textContent.innerHTML = '';
+    };
+
+    const setPowerState = (next: boolean) => {
+      isPowerOn = next && isActive;
+      if (isPowerOn) {
+        root.classList.add('system-on');
+        display?.classList.remove('off');
+        bootSequence();
+      } else {
+        applyOffState();
+      }
     };
 
     const findKeyElement = (eventKey: string) => {
@@ -674,12 +902,19 @@ const MonitorMock: React.FC = () => {
       const lowerKey = actionKey.toLowerCase();
 
       if (monitorContent[lowerKey]) {
-        textContent.innerHTML += monitorContent[lowerKey];
+        if (display) display.scrollTop = display.scrollHeight;
+        type(textContent, monitorContent[lowerKey], {
+          append: true,
+          onDone: scrollToBottom,
+          onStart: () => {
+            playOutputBeep();
+            scrollToBottom();
+          },
+        });
         const foundIndex = clickOrder.indexOf(lowerKey);
         if (foundIndex !== -1) {
           clickOrderIndex = (foundIndex + 1) % clickOrder.length;
         }
-        scrollToBottom();
         return;
       }
 
@@ -700,31 +935,45 @@ const MonitorMock: React.FC = () => {
     };
 
     const resetIntro = () => {
-      if (textContent) textContent.innerHTML = monitorContent.intro;
+      if (textContent) {
+        type(textContent, monitorContent.intro, {
+          append: false,
+          onDone: scrollToBottom,
+          onStart: () => {
+            playOutputBeep();
+            scrollToBottom();
+          },
+        });
+      }
       clickOrderIndex = 0;
     };
 
     const handlePowerToggle = () => {
-      isPowerOn = !isPowerOn;
-      if (isPowerOn) {
-        root.classList.add('system-on');
-        display?.classList.remove('off');
-        bootSequence();
-      } else {
-        root.classList.remove('system-on');
-        display?.classList.add('off');
-        if (textContent) textContent.innerHTML = '';
-      }
+      setPowerState(!isPowerOn);
+    };
+
+    const isTypingTarget = (el: Element | null) => {
+      if (!el) return false;
+      const tag = el.tagName;
+      const editable = (el as HTMLElement).isContentEditable;
+      return (
+        editable ||
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        (el as HTMLInputElement).type === 'search'
+      );
     };
 
     const wheelHandler = (e: WheelEvent) => {
+      if (!isActive || !isPowerOn) return;
       e.preventDefault();
       const direction = e.deltaY > 0 ? 1 : -1;
       handleScroll(direction);
     };
 
     const mouseDownHandler = (e: MouseEvent) => {
-      if (!isPowerOn) return;
+      if (!isActive || !isPowerOn) return;
       if (e.button === 0) {
         animateMouseBtn(mouseLeft);
       } else if (e.button === 2) {
@@ -736,11 +985,19 @@ const MonitorMock: React.FC = () => {
     const contextMenuHandler = (e: MouseEvent) => e.preventDefault();
 
     const keydownHandler = (e: KeyboardEvent) => {
-      if (!isPowerOn) return;
+      if (!isActive || !isPowerOn) return;
+      if (isTypingTarget(document.activeElement)) return;
+      if (e.key === 'Alt' || e.key === 'AltGraph') {
+        // Prevent browser menu focus on Alt so typing continues inside the virtual screen,
+        // but still allow the virtual key to animate.
+        e.preventDefault();
+        e.stopPropagation();
+      }
       const keyEl = findKeyElement(e.key);
       if (keyEl) keyEl.classList.add('active');
       if (['ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
       handleInput(null, e.key);
+      playKeyClick();
     };
 
     const keyupHandler = (e: KeyboardEvent) => {
@@ -754,15 +1011,21 @@ const MonitorMock: React.FC = () => {
         e.stopPropagation();
         if (!isPowerOn) return;
         handleInput(key.innerText, key.getAttribute('data-key') || '');
+        playKeyClick();
       };
       virtualHandlers.set(key, handler);
       key.addEventListener('mousedown', handler);
     });
 
-    bootSequence();
+    if (isActive) {
+      setPowerState(true);
+    } else {
+      applyOffState();
+    }
 
     const toggleInfo = () => setShowInfo((prev) => !prev);
     const mobileSectionHandler = (key: string) => () => handleInput(null, key);
+    const toggleSound = () => setSoundEnabled((prev) => !prev);
 
     root.addEventListener('wheel', wheelHandler, { passive: false });
     root.addEventListener('mousedown', mouseDownHandler);
@@ -771,6 +1034,7 @@ const MonitorMock: React.FC = () => {
     document.addEventListener('keyup', keyupHandler);
     powerBtn?.addEventListener('click', handlePowerToggle);
     infoBtn?.addEventListener('click', toggleInfo);
+    soundToggle?.addEventListener('click', toggleSound);
     const onMobileW = mobileSectionHandler('w');
     const onMobileP = mobileSectionHandler('p');
     const onMobileX = mobileSectionHandler('x');
@@ -783,8 +1047,7 @@ const MonitorMock: React.FC = () => {
     mobileBtnPower?.addEventListener('click', handlePowerToggle);
 
     return () => {
-      if (bootInterval) clearInterval(bootInterval);
-      if (bootTimeout) clearTimeout(bootTimeout);
+      clearBootTimers();
       root.removeEventListener('wheel', wheelHandler);
       root.removeEventListener('mousedown', mouseDownHandler);
       root.removeEventListener('contextmenu', contextMenuHandler);
@@ -793,6 +1056,7 @@ const MonitorMock: React.FC = () => {
       powerBtn?.removeEventListener('click', handlePowerToggle);
       virtualHandlers.forEach((handler, key) => key.removeEventListener('mousedown', handler));
       infoBtn?.removeEventListener('click', toggleInfo);
+      soundToggle?.removeEventListener('click', toggleSound);
       mobileBtnW?.removeEventListener('click', onMobileW);
       mobileBtnP?.removeEventListener('click', onMobileP);
       mobileBtnX?.removeEventListener('click', onMobileX);
@@ -800,16 +1064,19 @@ const MonitorMock: React.FC = () => {
       mobileBtnClear?.removeEventListener('click', resetIntro);
       mobileBtnPower?.removeEventListener('click', handlePowerToggle);
     };
-  }, []);
+  }, [isActive, type, soundEnabled]);
 
   return (
-    <div className="monitor-mock system-on" ref={rootRef}>
+    <div className={`monitor-mock${isActive ? ' system-on' : ''}`} ref={rootRef}>
       <style>{monitorStyles}</style>
       <div className="desk-setup">
         <div className="main-row">
           <div className="monitor-group">
             <div className="monitor-frame">
               <div className="screen" id="display">
+                <div className="command-sticky">
+                  COMMANDS: [ <span className="accent-text">W</span> ] WHO  |  [ <span className="accent-text">P</span> ] PURPOSE  |  [ <span className="accent-text">X</span> ] CREATIVE  |  [ <span className="accent-text">H</span> ] PASSIONS
+                </div>
                 <span id="text-content" />
                 <span className="cursor" />
               </div>
@@ -871,6 +1138,15 @@ const MonitorMock: React.FC = () => {
           <div className="keyboard-wrapper">
             <div className="keyboard" id="virtual-keyboard">
               <div className="row top-row">
+                <div
+                  className={`key sound-key ${soundEnabled ? 'active' : ''}`}
+                  id="soundToggle"
+                  role="button"
+                  aria-pressed={soundEnabled}
+                  title={`Sound ${soundEnabled ? 'on' : 'off'}`}
+                >
+                  SOUND
+                </div>
                 <div className="key" data-key="Escape">ESC</div>
                 <div className="key" data-key="F1">F1</div>
                 <div className="key" data-key="F2">F2</div>

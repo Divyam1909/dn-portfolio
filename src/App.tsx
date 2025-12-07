@@ -11,11 +11,7 @@ import Layout from './components/Layout';
 
 // Lazy-loaded components for better performance
 const BackgroundParticles = lazy(() => import('./components/BackgroundParticles'));
-const Home = lazy(() => import('./pages/Home'));
-const About = lazy(() => import('./pages/About'));
-const Resume = lazy(() => import('./pages/Resume'));
-const Projects = lazy(() => import('./pages/Projects'));
-const Contact = lazy(() => import('./pages/Contact'));
+const SinglePage = lazy(() => import('./pages/SinglePage'));
 const UniverseView = lazy(() => import('./pages/UniverseView'));
 
 // Loading fallback
@@ -178,7 +174,7 @@ const RoutingHandler: React.FC<{
       previousPathnameRef.current = pathname;
       return shouldShowUniverse;
     });
-  }, [location.pathname]);
+  }, [location.pathname, setHashWithoutHistory]);
 
   // Listen for hash changes (browser back/forward)
   React.useEffect(() => {
@@ -255,13 +251,7 @@ const RoutingHandler: React.FC<{
                 setLastPathFromUniverseView={setLastPathFromUniverseView}
                 lastPathFromUniverseView={lastPathFromUniverseView}
               >
-                <Routes>
-                  <Route index element={<Home />} />
-                  <Route path="about" element={<About />} />
-                  <Route path="resume" element={<Resume />} />
-                  <Route path="projects" element={<Projects />} />
-                  <Route path="contact" element={<Contact />} />
-                </Routes>
+                <SinglePage />
               </Layout>
             )
           }

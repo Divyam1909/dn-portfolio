@@ -517,6 +517,13 @@ const Home: React.FC = () => {
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Chat with Pixel 🤖
               </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ ml: 1, display: { xs: 'block', sm: 'none' } }}
+              >
+                For best experience, switch to desktop.
+              </Typography>
             </Box>
             <IconButton
               onClick={() => setChatbotOpen(false)}

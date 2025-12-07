@@ -10,6 +10,7 @@ import {
   Divider,
   Chip,
   useTheme,
+  useMediaQuery,
   Button,
   Alert,
 } from '@mui/material';
@@ -368,6 +369,7 @@ const Resume: React.FC = () => {
     }
   });
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isDark = theme.palette.mode === 'dark';
   const { data } = usePortfolioData();
   const { workExperience, education, skills } = data;
@@ -491,6 +493,16 @@ const Resume: React.FC = () => {
       __meta: { issueDateISO: item.issueDateISO }
     }));
   }, [certifications, orderDesc]);
+
+  const tabItems = useMemo(
+    () => [
+      { label: 'Experience', icon: <WorkIcon />, value: 0 },
+      { label: 'Education', icon: <SchoolIcon />, value: 1 },
+      { label: 'Skills', icon: <CodeIcon />, value: 2 },
+      { label: 'Certifications', icon: <AchievementsIcon />, value: 3 },
+    ],
+    []
+  );
   
 
   return (
@@ -500,32 +512,6 @@ const Resume: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              fontWeight: 700,
-              background: isDark
-                ? 'linear-gradient(90deg, #90CAF9 0%, #F48FB1 100%)'
-                : 'linear-gradient(90deg, #3F51B5 0%, #F50057 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Resume
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            sx={{ borderRadius: 8 }}
-            component="a"
-            href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
-            download
-          >
-            Download Resume
-          </Button>
-        </Box>
 
       </motion.div>
 
@@ -536,57 +522,203 @@ const Resume: React.FC = () => {
           overflow: 'hidden',
           position: 'relative',
           width: '100%',
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(18,24,39,0.72), rgba(30,41,59,0.58))'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.65), rgba(245,247,250,0.55))',
+          backdropFilter: 'blur(14px) saturate(140%)',
+          border: `1px solid ${isDark ? 'rgba(144, 202, 249, 0.25)' : 'rgba(63, 81, 181, 0.18)'}`,
+          boxShadow: isDark
+            ? '0 20px 45px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02)'
+            : '0 16px 40px rgba(63,81,181,0.12), 0 0 0 1px rgba(255,255,255,0.6)',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `
+              linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+              linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: '28px 28px',
+            opacity: isDark ? 0.08 : 0.12,
+            pointerEvents: 'none',
+          },
         }}
       >
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          aria-label="resume sections"
+        <Box
           sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            backgroundColor: isDark
-              ? 'rgba(30, 30, 30, 0.6)'
-              : 'rgba(245, 245, 245, 0.6)',
-            '& .MuiTabs-indicator': {
-              height: 3,
-              borderRadius: '3px 3px 0 0',
-            },
-            minHeight: { xs: 48, md: 64 },
-            '& .MuiTab-root': {
-              minHeight: { xs: 48, md: 64 },
-              px: { xs: 1, sm: 2 },
-            },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            px: { xs: 1, sm: 2 },
+            pt: { xs: 1, sm: 1.5 },
           }}
         >
-          <Tab
-            icon={<WorkIcon />}
-            label="Experience"
-            {...a11yProps(0)}
-          />
-          <Tab
-            icon={<SchoolIcon />}
-            label="Education"
-            {...a11yProps(1)}
-          />
-          <Tab
-            icon={<CodeIcon />}
-            label="Skills"
-            {...a11yProps(2)}
-          />
-          <Tab
-            icon={<AchievementsIcon />}
-            label="Certifications"
-            {...a11yProps(3)}
-          />
-        </Tabs>
+          {isMobile ? (
+            <Box sx={{ flexGrow: 1 }}>
+              <Box
+                component="select"
+                value={tabValue}
+                onChange={(e) => handleTabChange(e as any, Number(e.target.value))}
+                aria-label="resume sections"
+                className="resume-tabs-select"
+                sx={{
+                  width: '100%',
+                  borderRadius: 12,
+                  px: 1.5,
+                  py: 1.2,
+                  border: `1px solid ${
+                    isDark ? 'rgba(255,255,255,0.15)' : 'rgba(63,81,181,0.25)'
+                  }`,
+                  backgroundColor: isDark ? 'rgba(22, 26, 33, 0.9)' : 'rgba(248, 249, 252, 0.95)',
+                  color: isDark ? '#eef6ff' : '#1f2937',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  fontSize: '0.9rem',
+                  boxShadow: isDark
+                    ? '0 10px 24px rgba(0,0,0,0.45)'
+                    : '0 10px 24px rgba(63,81,181,0.18)',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236678ed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'calc(100% - 14px) center',
+                  backgroundSize: '14px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
+                  '&:focus': {
+                    borderColor: theme.palette.primary.main,
+                    boxShadow: `0 0 0 3px ${theme.palette.primary.main}33`,
+                    transform: 'translateY(-1px)',
+                  },
+                  '& option': {
+                    backgroundColor: isDark ? '#0f1419' : '#fff',
+                    color: isDark ? '#e8f2ff' : '#1f2937',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                  },
+                }}
+              >
+                {tabItems.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </Box>
+            </Box>
+          ) : (
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons={false}
+              aria-label="resume sections"
+              TabIndicatorProps={{ children: <span className="MuiTabs-indicatorSpan" /> }}
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 2,
+                px: { xs: 0.4, sm: 0.85 },
+                py: { xs: 0.1, sm: 0.5 },
+                backgroundColor: isDark
+                  ? 'rgba(22, 26, 33, 0.75)'
+                  : 'rgba(248, 249, 252, 0.8)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: isDark
+                  ? '0 10px 30px rgba(0,0,0,0.35)'
+                  : '0 10px 30px rgba(63,81,181,0.12)',
+                '& .MuiTabs-indicator': {
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 4,
+                  transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& .MuiTabs-indicatorSpan': {
+                    width: '82%',
+                    maxWidth: 140,
+                    height: '100%',
+                    borderRadius: 999,
+                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${
+                      isDark ? '#7aa6ff' : '#5c6bc0'
+                    })`,
+                    boxShadow: `0 6px 18px ${theme.palette.primary.main}40`,
+                  },
+                },
+                minHeight: { xs: 38, md: 50 },
+                '& .MuiTab-root': {
+                  minHeight: { xs: 38, md: 50 },
+                  px: { xs: 0.75, sm: 1.4 },
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  fontWeight: 700,
+                  fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                  flex: 1,
+                  maxWidth: 'unset',
+                  color: isDark ? 'rgba(255,255,255,0.78)' : 'rgba(0,0,0,0.74)',
+                  transition: 'color 0.25s ease, transform 0.25s ease, background 0.25s ease',
+                  borderRadius: 999,
+                  position: 'relative',
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    transform: 'translateY(-2px)',
+                    background: isDark
+                      ? 'rgba(255,255,255,0.04)'
+                      : 'rgba(63,81,181,0.06)',
+                  },
+                  '&.Mui-selected': {
+                    color: isDark ? '#fff' : theme.palette.primary.main,
+                    textShadow: isDark ? '0 4px 18px rgba(124, 179, 255, 0.35)' : '0 4px 18px rgba(63, 81, 181, 0.35)',
+                  },
+                  '& .MuiTab-iconWrapper': {
+                    mr: 0.5,
+                    fontSize: '0.95rem',
+                  },
+                },
+                flexGrow: 1,
+                minWidth: 0,
+              }}
+            >
+              {tabItems.map((item) => (
+                <Tab
+                  key={item.value}
+                  icon={item.icon}
+                  label={item.label}
+                  {...a11yProps(item.value)}
+                />
+              ))}
+            </Tabs>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            sx={{ borderRadius: 8, whiteSpace: 'nowrap' }}
+            component="a"
+            href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
+            download
+          >
+            Download
+          </Button>
+        </Box>
 
         <TabPanel value={tabValue} index={0}>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+            <Button
+              onClick={() => setOrderDesc((s) => !s)}
+              size="small"
+              variant="outlined"
+              sx={{
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                '&:hover': {
+                  borderColor: theme.palette.primary.dark,
+                  backgroundColor: theme.palette.action.hover,
+                },
+              }}
+            >
               {orderDesc ? "Newest first" : "Oldest first"}
             </Button>
           </Box>
@@ -595,7 +727,21 @@ const Resume: React.FC = () => {
 
         <TabPanel value={tabValue} index={1}>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+          <Button
+            onClick={() => setOrderDesc((s) => !s)}
+            size="small"
+            variant="outlined"
+            sx={{
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              '&:hover': {
+                borderColor: theme.palette.primary.dark,
+                backgroundColor: theme.palette.action.hover,
+              },
+            }}
+          >
               {orderDesc ? "Newest first" : "Oldest first"}
             </Button>
           </Box>

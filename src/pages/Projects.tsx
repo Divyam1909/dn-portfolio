@@ -123,23 +123,6 @@ const Projects: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 700,
-            mb: 3,
-            background: isDark 
-              ? 'linear-gradient(90deg, #90CAF9 0%, #F48FB1 100%)'
-              : 'linear-gradient(90deg, #3F51B5 0%, #F50057 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          My Projects
-        </Typography>
-        
         <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
           <Grid item xs={12} md={6}>
             <Paper
@@ -149,6 +132,20 @@ const Projects: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 borderRadius: 2,
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(30,44,68,0.62), rgba(16,24,40,0.5))'
+                  : 'linear-gradient(135deg, rgba(235,243,255,0.85), rgba(220,233,255,0.72))',
+                border: `1px solid ${isDark ? 'rgba(118, 166, 255, 0.45)' : 'rgba(63, 81, 181, 0.4)'}`,
+                boxShadow: isDark
+                  ? '0 12px 28px rgba(0,0,0,0.35), 0 0 0 1px rgba(118,166,255,0.08)'
+                  : '0 12px 28px rgba(63,81,181,0.12), 0 0 0 1px rgba(118,140,255,0.12)',
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  boxShadow: isDark
+                    ? '0 14px 30px rgba(0,0,0,0.45), 0 0 0 1px rgba(118,166,255,0.16)'
+                    : '0 14px 30px rgba(63,81,181,0.16), 0 0 0 1px rgba(118,140,255,0.18)',
+                },
                 width: '100%',
                 boxSizing: 'border-box',
               }}
@@ -174,6 +171,62 @@ const Projects: React.FC = () => {
                   value={category}
                   onChange={handleCategoryChange}
                   label="Category"
+                  sx={{
+                    borderRadius: 2,
+                    backgroundColor: isDark ? 'rgba(22, 26, 33, 0.9)' : 'rgba(248, 249, 252, 0.95)',
+                    color: isDark ? '#eef6ff' : '#1f2937',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.9rem',
+                    boxShadow: isDark
+                      ? '0 10px 24px rgba(0,0,0,0.45)'
+                      : '0 10px 24px rgba(63,81,181,0.14)',
+                    '& .MuiSelect-icon': {
+                      color: theme.palette.primary.main,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(63,81,181,0.25)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: theme.palette.primary.main,
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: theme.palette.primary.main,
+                      boxShadow: `0 0 0 3px ${theme.palette.primary.main}33`,
+                    },
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        mt: 0.5,
+                        borderRadius: 2,
+                        background: isDark
+                          ? 'linear-gradient(135deg, rgba(30,44,68,0.85), rgba(16,24,40,0.78))'
+                          : 'linear-gradient(135deg, rgba(235,243,255,0.95), rgba(220,233,255,0.88))',
+                        border: `1px solid ${isDark ? 'rgba(118,166,255,0.45)' : 'rgba(63,81,181,0.45)'}`,
+                        boxShadow: isDark
+                          ? '0 14px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(118,166,255,0.12)'
+                          : '0 14px 32px rgba(63,81,181,0.16), 0 0 0 1px rgba(118,140,255,0.18)',
+                        backdropFilter: 'blur(10px)',
+                        '& .MuiMenuItem-root': {
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          color: isDark ? '#eaf2ff' : '#1f2937',
+                          '&.Mui-selected': {
+                            backgroundColor: isDark
+                              ? 'rgba(118,166,255,0.16)'
+                              : 'rgba(63,81,181,0.12)',
+                          },
+                          '&.Mui-selected:hover': {
+                            backgroundColor: isDark
+                              ? 'rgba(118,166,255,0.22)'
+                              : 'rgba(63,81,181,0.16)',
+                          },
+                        },
+                      },
+                    },
+                  }}
                 >
                   {categories.map((cat) => (
                     <MenuItem key={cat} value={cat}>

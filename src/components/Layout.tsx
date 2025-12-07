@@ -312,9 +312,21 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
         sx={{
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': { 
-            width: 280,
+            width: 300,
             boxSizing: 'border-box',
-            boxShadow: theme.shadows[5]
+            background: isDarkMode
+              ? 'linear-gradient(135deg, rgba(22, 28, 45, 0.92), rgba(12, 17, 30, 0.9))'
+              : 'linear-gradient(135deg, rgba(240, 245, 255, 0.98), rgba(224, 234, 255, 0.94))',
+            borderRight: `1px solid ${
+              isDarkMode ? 'rgba(118,166,255,0.35)' : 'rgba(63,81,181,0.35)'
+            }`,
+            boxShadow: isDarkMode
+              ? '0 20px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(118,166,255,0.1)'
+              : '0 20px 40px rgba(63,81,181,0.18), 0 0 0 1px rgba(118,140,255,0.14)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            padding: theme.spacing(2),
+            color: isDarkMode ? '#e8f0ff' : '#0f172a',
           },
         }}
       >
@@ -336,7 +348,7 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={location.pathname}
+              key="single-page-content"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
