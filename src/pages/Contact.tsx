@@ -333,7 +333,7 @@ const Contact: React.FC = () => {
                   >
                     <img 
                       src={personalInfo.profileImage || animePhoto} 
-                      alt={personalInfo.name}
+                      alt={`${personalInfo.name} profile photo`}
                       className="profile-image"
                     />
                   </div>
@@ -521,7 +521,7 @@ const Contact: React.FC = () => {
                   <Box sx={{ mt: 2, mb: 3, textAlign: 'center' }}>
                     <img 
                       src={personalInfo.profileImage || animePhoto} 
-                      alt={personalInfo.name}
+                      alt={`${personalInfo.name} profile photo`}
                       style={{
                         width: '100%',
                         maxWidth: '300px',
