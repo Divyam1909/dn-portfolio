@@ -865,7 +865,6 @@ const Resume: React.FC = () => {
             <Timeline items={sortedCertifications} />
           </Paper>
         </TabPanel>
-        </TabPanel>
 
       </Paper>
     </Box>
