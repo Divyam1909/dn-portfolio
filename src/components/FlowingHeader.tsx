@@ -11,7 +11,7 @@ import {
   Container,
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, LayoutGroup } from 'framer-motion';
 import ThemeSwitch from './toggle';
 
@@ -25,6 +25,7 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
   const isDark = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { label: 'Home', path: '/' },
@@ -143,8 +144,7 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
                     <Button
-                      component={RouterLink}
-                      to={item.path}
+                      onClick={() => navigate(item.path)}
                       sx={{
                         color: isActive(item.path)
                           ? '#fff'
@@ -157,6 +157,7 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
                         overflow: 'hidden',
                         background: 'transparent',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'pointer', // Ensure clickability feedback
                         '&::before': {
                           content: '""',
                           position: 'absolute',

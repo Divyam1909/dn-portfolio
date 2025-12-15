@@ -105,6 +105,14 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
     setDrawerOpen(!drawerOpen);
   };
 
+  const handleDrawerCloseAndNavigate = (path: string) => {
+    setDrawerOpen(false); // Close the drawer
+    // Add a small delay to allow the drawer to close visually before navigating
+    setTimeout(() => {
+      navigate(path);
+    }, 300); // Adjust delay as needed, e.g., matching drawer close animation duration
+  };
+
   // Navigation animation variants
   const navVariants = {
     hidden: { 
@@ -204,7 +212,7 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
             key={item.name}
             component={RouterLink}
             to={item.path}
-            onClick={onClick}
+            onClick={() => handleDrawerCloseAndNavigate(item.path)}
             onMouseEnter={() => handlePrefetch(item.path)}
             onMouseLeave={() => setHoveredPath(null)}
             sx={{
@@ -308,7 +316,6 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
         variant="temporary"
         open={drawerOpen}
         onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': { 

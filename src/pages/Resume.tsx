@@ -722,7 +722,17 @@ const Resume: React.FC = () => {
               {orderDesc ? "Newest first" : "Oldest first"}
             </Button>
           </Box>
-          <Timeline items={sortedExperience} />
+          <Paper 
+            elevation={1} 
+            sx={{ 
+              p: { xs: 2, sm: 3 }, 
+              borderRadius: 2,
+              height: '100%',
+              background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)'
+            }}
+          >
+            <Timeline items={sortedExperience} />
+          </Paper>
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
@@ -825,11 +835,35 @@ const Resume: React.FC = () => {
 
         <TabPanel value={tabValue} index={3}>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button onClick={() => setOrderDesc((s) => !s)} size="small">
+            <Button
+              onClick={() => setOrderDesc((s) => !s)}
+              size="small"
+              variant="outlined"
+              sx={{
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                '&:hover': {
+                  borderColor: theme.palette.primary.dark,
+                  backgroundColor: theme.palette.action.hover,
+                },
+              }}
+            >
               {orderDesc ? "Newest first" : "Oldest first"}
             </Button>
           </Box>
-          <Timeline items={sortedCertifications} />
+          <Paper 
+            elevation={1} 
+            sx={{ 
+              p: { xs: 2, sm: 3 }, 
+              borderRadius: 2,
+              height: '100%',
+              background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)'
+            }}
+          >
+            <Timeline items={sortedCertifications} />
+          </Paper>
         </TabPanel>
 
       </Paper>
