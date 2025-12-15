@@ -11,7 +11,7 @@ import {
   Container,
 } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { motion, LayoutGroup } from 'framer-motion';
 import ThemeSwitch from './toggle';
 
@@ -25,7 +25,6 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
   const isDark = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
-  const navigate = useNavigate();
 
   const navItems = [
     { label: 'Home', path: '/' },
@@ -143,44 +142,53 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <Button
-                      onClick={() => navigate(item.path)}
-                      sx={{
-                        color: isActive(item.path)
-                          ? '#fff'
-                          : theme.palette.text.primary,
-                        fontWeight: isActive(item.path) ? 700 : 500,
-                        px: 3,
-                        py: 1,
-                        borderRadius: '50px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: 'transparent',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        cursor: 'pointer', // Ensure clickability feedback
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: isDark
-                            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
-                            : 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                        },
-                        '&:hover::before': {
-                          opacity: isActive(item.path) ? 0 : 1,
-                        },
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: isActive(item.path)
-                            ? '0 8px 16px rgba(102, 126, 234, 0.3)'
-                            : 'none',
-                        },
-                      }}
+                        <Button
+                          component={RouterLink}
+                          to={item.path}
+                          onClick={(e) => {
+                            if (item.path === '/resume' && location.pathname === '/resume') {
+                              e.preventDefault(); // Prevent default RouterLink behavior
+                              window.location.hash = '#experience'; // Default to experience tab
+                            } else if (item.path !== location.pathname) {
+                              e.preventDefault(); // Prevent default RouterLink behavior
+                              window.location.href = item.path; // Force full page reload for other path changes
+                            }
+                          }}
+                          sx={{
+                            color: isActive(item.path)
+                              ? '#fff'
+                              : theme.palette.text.primary,
+                            fontWeight: isActive(item.path) ? 700 : 500,
+                            px: 3,
+                            py: 1,
+                            borderRadius: '50px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            background: 'transparent',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              background: isDark
+                                ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+                              opacity: 0,
+                              transition: 'opacity 0.3s ease',
+                            },
+                            '&:hover::before': {
+                              opacity: isActive(item.path) ? 0 : 1,
+                            },
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: isActive(item.path)
+                                ? '0 8px 16px rgba(102, 126, 234, 0.3)'
+                                : 'none',
+                            },
+                          }}
                     >
                       {isActive(item.path) && (
                         <motion.span
