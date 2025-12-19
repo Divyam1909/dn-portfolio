@@ -23,15 +23,26 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const focusInput = () => {
+    // Prevent focusing from scrolling the whole page (fixes scroll-jump on open).
+    const el = inputRef.current as (HTMLInputElement & { focus: (opts?: any) => void }) | null;
+    el?.focus?.({ preventScroll: true });
+  };
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll ONLY the chat messages container (never the page).
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   };
 
   // Auto-focus input on mount
   useEffect(() => {
-    inputRef.current?.focus();
+    // Defer a tick so layout is stable, and avoid page scrolling.
+    requestAnimationFrame(() => focusInput());
   }, []);
 
   // Scroll to bottom and refocus input after messages update
@@ -39,7 +50,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
     scrollToBottom();
     // Refocus after bot responds
     if (!loading) {
-      inputRef.current?.focus();
+      focusInput();
     }
   }, [messages, loading]);
 
@@ -116,6 +127,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
             borderRadius: '3px',
           },
         }}
+        ref={messagesContainerRef}
       >
         {messages.map((msg, index) => (
           <Box
@@ -216,7 +228,6 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
             variant="outlined"
             disabled={loading}
             inputRef={inputRef}
-            autoFocus
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 3,

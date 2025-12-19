@@ -41,7 +41,7 @@ const RealisticSolarSystemScene: React.FC = () => {
       orbitRadius: 14,
       orbitSpeed: 0.0007,
       rotationSpeed: 0.005,
-      route: '/resume#experience',
+      route: '/resume?resume=experience',
     },
     {
       name: 'Education',
@@ -51,7 +51,7 @@ const RealisticSolarSystemScene: React.FC = () => {
       orbitRadius: 18,
       orbitSpeed: 0.0006,
       rotationSpeed: 0.007,
-      route: '/resume#education',
+      route: '/resume?resume=education',
     },
     {
       name: 'Skills',
@@ -61,7 +61,7 @@ const RealisticSolarSystemScene: React.FC = () => {
       orbitRadius: 22,
       orbitSpeed: 0.0005,
       rotationSpeed: 0.004,
-      route: '/resume#skills',
+      route: '/resume?resume=skills',
     },
     {
       name: 'Contact',

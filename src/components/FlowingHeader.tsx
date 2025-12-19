@@ -142,18 +142,9 @@ const FlowingHeader: React.FC<FlowingHeaderProps> = ({ toggleTheme, onMenuClick 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                        <Button
-                          component={RouterLink}
-                          to={item.path}
-                          onClick={(e) => {
-                            if (item.path === '/resume' && location.pathname === '/resume') {
-                              e.preventDefault(); // Prevent default RouterLink behavior
-                              window.location.hash = '#experience'; // Default to experience tab
-                            } else if (item.path !== location.pathname) {
-                              e.preventDefault(); // Prevent default RouterLink behavior
-                              window.location.href = item.path; // Force full page reload for other path changes
-                            }
-                          }}
+                    <Button
+                      component={RouterLink}
+                      to={item.path}
                           sx={{
                             color: isActive(item.path)
                               ? '#fff'

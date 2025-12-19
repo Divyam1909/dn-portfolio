@@ -965,11 +965,16 @@ const MonitorMock: React.FC = () => {
       );
     };
 
+    // MODIFIED WHEEL HANDLER: Only captures scroll if hovering over display
     const wheelHandler = (e: WheelEvent) => {
       if (!isActive || !isPowerOn) return;
-      e.preventDefault();
-      const direction = e.deltaY > 0 ? 1 : -1;
-      handleScroll(direction);
+      
+      // Check if mouse event target is inside the display element
+      if (display && display.contains(e.target as Node)) {
+        e.preventDefault(); // Only prevent default page scroll if inside monitor
+        const direction = e.deltaY > 0 ? 1 : -1;
+        handleScroll(direction);
+      }
     };
 
     const mouseDownHandler = (e: MouseEvent) => {
@@ -1254,4 +1259,4 @@ const About: React.FC = () => {
   return <MonitorMock />;
 };
 
-export default About; 
+export default About;

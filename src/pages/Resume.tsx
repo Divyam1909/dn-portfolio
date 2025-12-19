@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,376 +7,489 @@ import {
   Paper,
   Tabs,
   Tab,
-  Divider,
+  Button,
   Chip,
   useTheme,
   useMediaQuery,
-  Button,
-  Alert,
+  alpha,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  CircularProgress,
 } from '@mui/material';
-import { parseFlexibleDate, dateForSorting } from "../utils/date"; // Import dateForSorting
 import {
   Work as WorkIcon,
   School as SchoolIcon,
   Code as CodeIcon,
   EmojiEvents as AchievementsIcon,
   Download as DownloadIcon,
+  CalendarMonth as CalendarIcon,
+  LocationOn as LocationIcon,
+  Business as BusinessIcon,
+  ExpandMore as ExpandMoreIcon,
+  KeyboardArrowDown as ArrowDownIcon,
+  KeyboardArrowUp as ArrowUpIcon,
+  Sort as SortIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolioData } from '../contexts/DataContext';
 import { portfolioAPI } from '../services/api';
+import { dateForSorting } from "../utils/date";
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+// --- Types ---
+interface TimelineItemData {
+  id: string | number;
+  title: string;
+  subtitle: string;
+  date: string;
+  location: string;
+  description: string;
+  tags: string[];
+  isCurrent?: boolean;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
+// --- Shared Components ---
+
+const TabPanel: React.FC<{ children?: React.ReactNode; index: number; value: number }> = ({ children, value, index }) => (
+  <div role="tabpanel" hidden={value !== index} style={{ width: '100%' }}>
+    {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+  </div>
+);
+
+// The Vertical Line Container
+const TimelineContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const theme = useTheme();
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`resume-tabpanel-${index}`}
-      aria-labelledby={`resume-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ py: 3, px: { xs: 1, sm: 2, md: 3 } }}>
-          {children}
-        </Box>
-      )}
-    </div>
+    <Box sx={{ position: 'relative', pl: { xs: 2, md: 4 } }}>
+      {/* The Continuous Line */}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: { xs: 6, md: 15 }, // Aligned with the dots
+          top: 20,
+          bottom: 40,
+          width: 2,
+          background: `linear-gradient(to bottom, ${alpha(theme.palette.primary.main, 0.5)}, ${alpha(theme.palette.divider, 0.1)})`,
+          borderRadius: 1,
+          zIndex: 0,
+        }}
+      />
+      {children}
+    </Box>
   );
 };
 
-const a11yProps = (index: number) => {
-  return {
-    id: `resume-tab-${index}`,
-    'aria-controls': `resume-tabpanel-${index}`,
-  };
+// The Dot that reacts to Hover
+const TimelineDot: React.FC<{ color?: string }> = ({ color }) => {
+  const theme = useTheme();
+  const activeColor = color || theme.palette.primary.main;
+
+  return (
+    <Box
+      className="timeline-dot"
+      sx={{
+        position: 'absolute',
+        left: { xs: -3, md: 6 }, // Positioning relative to the item wrapper
+        top: 28,
+        width: 20,
+        height: 20,
+        borderRadius: '50%',
+        bgcolor: theme.palette.background.default,
+        border: `2px solid ${alpha(activeColor, 0.5)}`,
+        zIndex: 1,
+        transition: 'all 0.3s ease',
+        boxShadow: `0 0 0 0px ${alpha(activeColor, 0)}`,
+        // The inner fill circle (initially small)
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%) scale(0)',
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          bgcolor: activeColor,
+          transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        }
+      }}
+    />
+  );
 };
 
-// Timeline component for experiences
-const Timeline: React.FC<{ items: any[] }> = ({ items }) => {
+// 1. Accordion Component for Experience
+const ExperienceAccordion: React.FC<{ items: TimelineItemData[] }> = ({ items }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const primaryColor = theme.palette.primary.main;
+  
+  // State for "One open at a time"
+  const [expanded, setExpanded] = useState<string | false>(false);
+  // State for "View More"
+  const [showAll, setShowAll] = useState(false);
 
-  // Handle empty state
+  const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded ? panel : false);
+  };
+
+  const visibleItems = showAll ? items : items.slice(0, 5);
+  const hasMore = items.length > 5;
+
   if (!items || items.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 5 }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          No entries found
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Add entries via the admin panel to see them here.
-        </Typography>
+      <Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}>
+        <Typography variant="h6">No experience entries found.</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ position: 'relative' }}>
-      {/* Vertical timeline line */}
-      <Box
-        sx={{
-          position: 'absolute',
-          left: { xs: 14, md: 20 },
-          top: 15,
-          bottom: 15,
-          width: 3,
-          backgroundImage: isDark 
-            ? `linear-gradient(to bottom, transparent, ${primaryColor} 10%, ${primaryColor} 90%, transparent)`
-            : `linear-gradient(to bottom, transparent, ${primaryColor} 10%, ${primaryColor} 90%, transparent)`,
-          zIndex: 1,
-          borderRadius: '3px',
-          boxShadow: isDark 
-            ? `0 0 8px rgba(144, 202, 249, 0.4)` 
-            : `0 0 8px rgba(63, 81, 181, 0.3)`,
-        }}
-      />
+    <TimelineContainer>
+      {visibleItems.map((item, index) => {
+        const panelId = `panel-${item.id}-${index}`;
+        const isPanelExpanded = expanded === panelId;
 
-      {items.map((item, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-        >
-          <Box
-            sx={{
-              position: 'relative',
-              mb: 4,
-              ml: { xs: 4, sm: 5, md: 6 },
-              pl: { xs: 1, sm: 2, md: 3 },
+        return (
+          <Box 
+            key={item.id} 
+            sx={{ 
+              position: 'relative', 
+              mb: 3, 
+              pl: { xs: 3, md: 5 },
+              // HOVER EFFECT: Triggers changes in the child .timeline-dot
+              '&:hover .timeline-dot': {
+                borderColor: theme.palette.primary.main,
+                boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.2)}`,
+                transform: 'scale(1.1)',
+              },
+              '&:hover .timeline-dot::after': {
+                transform: 'translate(-50%, -50%) scale(1)',
+              }
             }}
           >
-            {/* Timeline connecting line to card */}
-            <Box
-              sx={{
-                position: 'absolute',
-                left: { xs: -14, sm: -20, md: -25 },
-                top: 10,
-                height: 2,
-                width: { xs: 14, sm: 20, md: 25 },
-                backgroundColor: primaryColor,
-                opacity: 0.7,
-              }}
-            />
+            <TimelineDot />
             
-            {/* Timeline dot/bullet with decoration */}
-            <Box
-              sx={{
-                position: 'absolute',
-                left: { xs: -32, sm: -40, md: -48 },
-                top: 0,
-                zIndex: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              {/* Main dot */}
-              <Box
+              <Accordion
+                expanded={isPanelExpanded}
+                onChange={handleChange(panelId)}
                 sx={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${primaryColor} 0%, ${
-                    isDark ? '#64B5F6' : '#7986CB'
-                  } 100%)`,
-                  border: `2px solid ${isDark ? '#121212' : '#fff'}`,
-                  boxShadow: `0 0 8px ${isDark ? 'rgba(144, 202, 249, 0.6)' : 'rgba(63, 81, 181, 0.4)'}`,
-                  zIndex: 3,
-                  position: 'relative',
+                  borderRadius: '16px !important',
+                  background: isDark
+                    ? `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.8)} 100%)`
+                    : `linear-gradient(145deg, #ffffff 0%, #f8faff 100%)`,
+                  backdropFilter: 'blur(12px)',
+                  border: `1px solid ${isDark ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.primary.main, 0.08)}`,
+                  boxShadow: isDark
+                    ? '0 4px 20px rgba(0, 0, 0, 0.2)'
+                    : '0 4px 20px rgba(100, 100, 100, 0.05)',
+                  '&:before': { display: 'none' },
+                  transition: 'all 0.3s ease',
+                  '&.Mui-expanded': {
+                    boxShadow: isDark
+                      ? `0 8px 30px rgba(0, 0, 0, 0.5)`
+                      : `0 8px 30px ${alpha(theme.palette.primary.main, 0.15)}`,
+                    borderColor: theme.palette.primary.main,
+                  }
                 }}
-              />
-              
-              {/* Pulse animation effect */}
-              <Box
-                component={motion.div}
-                initial={{ opacity: 0.7, scale: 0.8 }}
-                animate={{ 
-                  opacity: [0.7, 0.5, 0.7], 
-                  scale: [0.8, 1.1, 0.8] 
-                }}
-                transition={{ 
-                  duration: 2.5, 
-                  repeat: Infinity,
-                  ease: "easeInOut" 
-                }}
-                sx={{
-                  position: 'absolute',
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  background: isDark 
-                    ? `radial-gradient(circle, ${primaryColor}60 0%, transparent 70%)` 
-                    : `radial-gradient(circle, ${primaryColor}40 0%, transparent 70%)`,
-                }}
-              />
-            </Box>
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon sx={{ color: theme.palette.primary.main }} />}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    '& .MuiAccordionSummary-content': {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 2
+                    }
+                  }}
+                >
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: isPanelExpanded ? theme.palette.primary.main : theme.palette.text.primary }}>
+                      {item.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      <BusinessIcon sx={{ fontSize: 16, opacity: 0.7 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, opacity: 0.9 }}>
+                        {item.subtitle}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-            {/* Timeline card */}
-            <Paper
-              elevation={2}
-              sx={{
-                p: { xs: 2, sm: 3 },
-                borderRadius: 2,
-                position: 'relative',
-                width: '100%',
-                overflow: 'hidden',
-                boxSizing: 'border-box',
-                transition: 'transform 0.3s, box-shadow 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: theme.shadows[8],
-                },
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: -10,
-                  top: 12,
-                  width: 0,
-                  height: 0,
-                  borderTop: '10px solid transparent',
-                  borderBottom: '10px solid transparent',
-                  borderRight: `10px solid ${
-                    isDark ? theme.palette.background.paper : theme.palette.background.paper
-                  }`,
-                },
-              }}
-            >
-              <Typography variant="h6" fontWeight={600}>
+                  <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: { sm: '120px' } }}>
+                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1, mb: 0.5 }}>
+                        <CalendarIcon sx={{ fontSize: 14, opacity: 0.7 }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+                          {item.date}
+                        </Typography>
+                     </Box>
+                     {item.location && (
+                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1 }}>
+                          <LocationIcon sx={{ fontSize: 14, opacity: 0.5 }} />
+                          <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                            {item.location}
+                          </Typography>
+                       </Box>
+                     )}
+                  </Box>
+                </AccordionSummary>
+                
+                <AccordionDetails sx={{ px: 3, pb: 3, pt: 0 }}>
+                  <Box sx={{ height: '1px', width: '100%', bgcolor: alpha(theme.palette.divider, 0.1), mb: 2 }} />
+                  
+                  <Typography variant="body2" sx={{ lineHeight: 1.8, color: theme.palette.text.secondary, mb: 2 }}>
+                    {item.description}
+                  </Typography>
+
+                  {item.tags && item.tags.length > 0 && (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                      {item.tags.map((tag, i) => (
+                        <Chip
+                          key={i}
+                          label={tag}
+                          size="small"
+                          sx={{
+                            backgroundColor: isDark ? alpha(theme.palette.primary.main, 0.1) : alpha(theme.palette.primary.main, 0.05),
+                            color: isDark ? theme.palette.primary.light : theme.palette.primary.dark,
+                            fontWeight: 500,
+                            fontSize: '0.75rem',
+                            border: `1px solid ${isDark ? alpha(theme.palette.primary.main, 0.2) : 'transparent'}`,
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            </motion.div>
+          </Box>
+        );
+      })}
+
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, pl: { xs: 0, md: 4 } }}>
+          <Button
+            onClick={() => setShowAll(!showAll)}
+            endIcon={showAll ? <ArrowUpIcon /> : <ArrowDownIcon />}
+            sx={{
+              borderRadius: 20,
+              px: 4,
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.2),
+              }
+            }}
+          >
+            {showAll ? 'Show Less' : `View ${items.length - 5} More Experiences`}
+          </Button>
+        </Box>
+      )}
+    </TimelineContainer>
+  );
+};
+
+// 2. Modern Card for Education & Certifications
+const ModernTimelineCard: React.FC<{ item: TimelineItemData; index: number }> = ({ item, index }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  return (
+    <Box 
+      sx={{ 
+        position: 'relative', 
+        mb: 3, 
+        pl: { xs: 3, md: 5 },
+        '&:hover .timeline-dot': {
+            borderColor: theme.palette.secondary.main,
+            boxShadow: `0 0 0 4px ${alpha(theme.palette.secondary.main, 0.2)}`,
+            transform: 'scale(1.1)',
+        },
+        '&:hover .timeline-dot::after': {
+            transform: 'translate(-50%, -50%) scale(1)',
+        }
+      }}
+    >
+      <TimelineDot color={theme.palette.secondary.main} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            borderRadius: 4,
+            position: 'relative',
+            background: isDark
+              ? `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.8)} 100%)`
+              : `linear-gradient(145deg, #ffffff 0%, #f8faff 100%)`,
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.primary.main, 0.08)}`,
+            boxShadow: isDark
+              ? '0 8px 32px rgba(0, 0, 0, 0.2)'
+              : '0 8px 32px rgba(100, 100, 100, 0.05)',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: isDark
+                ? `0 12px 40px rgba(0, 0, 0, 0.4)`
+                : `0 12px 40px ${alpha(theme.palette.secondary.main, 0.1)}`,
+              borderColor: theme.palette.secondary.main,
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', mb: 2, gap: 1 }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '1.1rem' }}>
                 {item.title}
               </Typography>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', my: 1, flexWrap: 'wrap' }}>
-                <Typography variant="subtitle1" color="primary">
-                  {item.organization}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ ml: { xs: 0, sm: 'auto' }, mt: { xs: 0.5, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}
-                >
-                  {item.date}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                <SchoolIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
+                <Typography variant="subtitle1" sx={{ color: theme.palette.secondary.main, fontWeight: 600 }}>
+                  {item.subtitle}
                 </Typography>
               </Box>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {item.location}
-              </Typography>
-              
-              <Typography variant="body1" paragraph>
-                {item.description}
-              </Typography>
-              
-              {item.highlights && (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                  {item.highlights.map((highlight: string, i: number) => (
-                    <Chip
-                      key={i}
-                      label={highlight}
-                      size="small"
-                      sx={{
-                        backgroundColor: isDark
-                          ? 'rgba(144, 202, 249, 0.1)'
-                          : 'rgba(63, 81, 181, 0.1)',
-                        color: theme.palette.primary.main,
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-            </Paper>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'flex-start', md: 'flex-end' }, gap: 0.5 }}>
+               <Typography variant="caption" sx={{ fontSize: '0.85rem', fontWeight: 500, color: theme.palette.text.secondary }}>
+                 {item.date}
+               </Typography>
+               {item.location && (
+                  <Typography variant="caption" sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
+                    {item.location}
+                  </Typography>
+               )}
+            </Box>
           </Box>
-        </motion.div>
-      ))}
+
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, lineHeight: 1.7, mb: 2 }}>
+            {item.description}
+          </Typography>
+
+          {item.tags && item.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+              {item.tags.map((tag, i) => (
+                <Chip
+                  key={i}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    backgroundColor: isDark ? alpha(theme.palette.secondary.main, 0.1) : alpha(theme.palette.secondary.main, 0.05),
+                    color: isDark ? theme.palette.secondary.light : theme.palette.secondary.dark,
+                    fontWeight: 500,
+                    fontSize: '0.75rem',
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Paper>
+      </motion.div>
     </Box>
   );
 };
 
-// Skill component with progress bar
-const Skill: React.FC<{ name: string; level: number }> = ({ name, level }) => {
+// Timeline Container for Education/Certs
+const ModernTimeline: React.FC<{ items: TimelineItemData[] }> = ({ items }) => {
+  if (!items || items.length === 0) {
+    return <Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}><Typography>No entries.</Typography></Box>;
+  }
+
+  return (
+    <TimelineContainer>
+      {items.map((item, index) => (
+        <ModernTimelineCard key={index} item={item} index={index} />
+      ))}
+    </TimelineContainer>
+  );
+};
+
+// Skill Bar Component (Unchanged)
+const ModernSkillBar: React.FC<{ name: string; level: number; delay: number }> = ({ name, level, delay }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const primaryColor = theme.palette.primary.main;
-  const secondaryColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
-  
+
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 1.5 
-      }}>
-        <Typography variant="body1" fontWeight={500}>{name}</Typography>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          position: 'relative'
-        }}>
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 600,
-              color: primaryColor,
-              position: 'relative',
-              zIndex: 2
-            }}
-          >
-            {level}%
-          </Typography>
-        </Box>
+    <Box sx={{ mb: 2.5 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>{name}</Typography>
+        <Typography variant="body2" color="primary">{level}%</Typography>
       </Box>
-      
-      <Box sx={{ position: 'relative', height: 10, width: '100%' }}>
-        {/* Background bar */}
-        <Box sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '100%',
-          borderRadius: 5,
-          background: secondaryColor,
-        }} />
-        
-        {/* Foreground progress bar with animation */}
-        <Box
-          component={motion.div}
+      <Box sx={{ 
+        height: 8, 
+        width: '100%', 
+        bgcolor: isDark ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.05),
+        borderRadius: 4,
+        overflow: 'hidden'
+      }}>
+        <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${level}%` }}
-          transition={{ 
-            duration: 1.2, 
-            ease: "easeOut",
-            delay: 0.2
-          }}
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
+          whileInView={{ width: `${level}%` }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay, ease: "easeOut" }}
+          style={{
             height: '100%',
-            borderRadius: 5,
-            background: `linear-gradient(90deg, ${primaryColor} 0%, ${
-              isDark ? '#64B5F6' : '#7986CB'
-            } 100%)`,
-            boxShadow: `0 0 8px ${isDark ? 'rgba(144, 202, 249, 0.5)' : 'rgba(63, 81, 181, 0.4)'}`,
+            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            borderRadius: 4,
           }}
         />
-        
-        {/* Dots/bullets decoration */}
-        {[0, 25, 50, 75, 100].map((mark) => (
-          <Box
-            key={mark}
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: `${mark}%`,
-              transform: 'translate(-50%, -50%)',
-              width: mark === 0 || mark === 100 ? 7 : 5,
-              height: mark === 0 || mark === 100 ? 7 : 5,
-              borderRadius: '50%',
-              backgroundColor: mark <= level ? primaryColor : secondaryColor,
-              transition: 'background-color 0.3s',
-              zIndex: 2,
-            }}
-          />
-        ))}
       </Box>
     </Box>
   );
 };
 
+// --- Main Page Component ---
 const Resume: React.FC = () => {
   const location = useLocation();
-  const [tabValue, setTabValue] = useState(() => {
-    const hash = location.hash.replace('#', '');
-    switch (hash) {
-      case 'experience':
-        return 0;
-      case 'education':
-        return 1;
-      case 'skills':
-        return 2;
-      case 'certifications':
-        return 3;
-      default:
-        return 0;
-    }
-  });
+  const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isDark = theme.palette.mode === 'dark';
-  const { data } = usePortfolioData();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  const { data, loading } = usePortfolioData();
   const { workExperience, education, skills } = data;
+  
   const [certifications, setCertifications] = useState<any[]>([]);
-  const [orderDesc, setOrderDesc] = useState(true); // New state for sorting order
+  const [orderDesc, setOrderDesc] = useState(true);
 
-  // Fetch certifications
+  const tabKeys = useMemo(() => ['experience', 'education', 'skills', 'certifications'] as const, []);
+
+  const getInitialTab = () => {
+    // In this app, the URL hash is reserved for view state (#simplified / #universe),
+    // so Resume tabs must NOT rely on location.hash.
+    // We store the active tab in the query string instead: ?resume=skills
+    const params = new URLSearchParams(location.search);
+    const tabFromQuery = params.get('resume')?.toLowerCase();
+    const idx = tabKeys.indexOf((tabFromQuery as any) ?? 'experience');
+    if (idx >= 0) return idx;
+
+    // Backwards-compatibility: if not in simplified view and hash was used before.
+    const hash = location.hash.replace('#', '').toLowerCase();
+    if (hash === 'education') return 1;
+    if (hash === 'skills') return 2;
+    if (hash === 'certifications') return 3;
+    return 0;
+  };
+
+  const [tabValue, setTabValue] = useState(getInitialTab);
+
+  useEffect(() => {
+    setTabValue(getInitialTab());
+  }, [location.search, location.hash]);
+
   useEffect(() => {
     const loadCertifications = async () => {
       try {
@@ -393,482 +506,193 @@ const Resume: React.FC = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    const hashMap = ['experience', 'education', 'skills', 'certifications'];
-    if (hashMap[newValue]) {
-      window.location.hash = hashMap[newValue];
+    const key = tabKeys[newValue] ?? 'experience';
+    const params = new URLSearchParams(location.search);
+    params.set('resume', key);
+
+    // Preserve #simplified (or any existing hash) while updating query param.
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${params.toString()}`,
+        hash: location.hash,
+      },
+      { replace: true }
+    );
+  };
+
+  const transformData = (items: any[], type: 'work' | 'education' | 'certification'): TimelineItemData[] => {
+    if (!items) return [];
+    
+    const sorted = [...items].sort((a, b) => {
+      const dateA = dateForSorting(a)?.valueOf() || 0;
+      const dateB = dateForSorting(b)?.valueOf() || 0;
+      return orderDesc ? dateB - dateA : dateA - dateB;
+    });
+
+    return sorted.map((item, index) => {
+        let tags: string[] = [];
+        if (type === 'work') tags = item.highlights || item.achievements || [];
+        if (type === 'education') tags = item.achievements || [];
+        if (type === 'certification') tags = item.skills || [];
+
+        let dateStr = "";
+        if (item.startDate && item.endDate) dateStr = `${item.startDate} - ${item.endDate}`;
+        else if (item.issueDate) dateStr = item.issueDate;
+        else dateStr = item.date || "";
+
+        return {
+            id: item._id || index,
+            title: item.title || item.degree || "",
+            subtitle: item.company || item.institution || item.issuer || "",
+            date: dateStr,
+            location: item.location || (item.credentialId ? `ID: ${item.credentialId}` : ""),
+            description: item.description || "",
+            tags: Array.isArray(tags) ? tags : [],
+            isCurrent: item.current || false
+        };
+    });
+  };
+
+  const timelineExperience = useMemo(() => transformData(workExperience || [], 'work'), [workExperience, orderDesc]);
+  const timelineEducation = useMemo(() => transformData(education || [], 'education'), [education, orderDesc]);
+  const timelineCertifications = useMemo(() => transformData(certifications || [], 'certification'), [certifications, orderDesc]);
+
+  const technicalSkills = Array.isArray(skills?.technical) ? skills.technical : [];
+  const softSkills = Array.isArray(skills?.soft) ? skills.soft.map((s: string) => ({ name: s, level: 85 })) : [];
+
+  const tabProps = {
+    sx: { 
+      textTransform: 'none', 
+      fontWeight: 600, 
+      fontSize: '1rem',
+      minHeight: 48,
     }
   };
 
-  // Use the raw workExperience array for sorting, but map to Timeline items for display.
-  // This preserves ISO fields for accurate sorting.
-  const sortedExperience = useMemo(() => {
-    const raw = Array.isArray(workExperience) ? [...workExperience] : [];
-
-    // Attach parsedDate for sorting (avoid modifying original object by shallow copy)
-    const stamped = raw.map(item => {
-      const parsed = dateForSorting(item); // uses ISO if available
-      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
-    });
-
-    // Sort by parsedDate (desc = newest first)
-    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
-
-    // Map to Timeline display shape
-    return stamped.map(({ item }) => ({
-      title: (item as any).title || '',
-      organization: (item as any).company || (item as any).organization || '',
-      date: ((item as any).startDate && (item as any).endDate)
-        ? `${(item as any).startDate} - ${(item as any).endDate}`
-        : ((item as any).startDateISO || (item as any).startDate
-            ? `${(item as any).startDate ?? (item as any).startDateISO}`
-            : ''),
-      location: (item as any).location || '',
-      description: (item as any).description || '',
-      highlights: (item as any).achievements || (item as any).highlights || [],
-      // Keep original for debugging or click actions if needed:
-      __meta: {
-        startDateISO: (item as any).startDateISO ?? (item as any).startDateISO,
-        endDateISO: (item as any).endDateISO ?? (item as any).endDateISO,
-        current: (item as any).current ?? false
-      }
-    }));
-  }, [workExperience, orderDesc]);
-
-
-  const sortedEducation = useMemo(() => {
-    const raw = Array.isArray(education) ? [...education] : [];
-  
-    const stamped = raw.map(item => {
-      const parsed = dateForSorting(item);
-      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
-    });
-  
-    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
-  
-    return stamped.map(({ item }) => ({
-      title: (item as any).degree || '',
-      organization: (item as any).institution || '',
-      date: ((item as any).startDate && (item as any).endDate)
-        ? `${(item as any).startDate} - ${(item as any).endDate}`
-        : ((item as any).startDateISO || (item as any).startDate || ''),
-      location: (item as any).location || '',
-      description: (item as any)?.description || '',
-      highlights: Array.isArray((item as any)?.achievements) ? (item as any).achievements : [],
-      __meta: {
-        startDateISO: (item as any)?.startDateISO,
-        endDateISO: (item as any)?.endDateISO,
-        current: (item as any)?.current ?? false
-      }
-    }));
-  }, [education, orderDesc]);
-
-  // Skill data formatting
-  const skillsData = {
-    technical: Array.isArray(skills.technical) ? skills.technical : [],
-    softSkills: Array.isArray(skills.soft) ? skills.soft.map((skill: string) => ({ name: skill, level: 85 })) : [],
-  };
-
-  // Format certifications data to match Timeline component structure
-  // Format certifications data to match Timeline component structure
-  // NOTE: expiryDate removed per request — only show issueDate
-  const sortedCertifications = useMemo(() => {
-    const raw = Array.isArray(certifications) ? [...certifications] : [];
-  
-    const stamped = raw.map(item => {
-      // dateForSorting will check issueDate / issueDateISO as fallback
-      const parsed = dateForSorting(item);
-      return { __parsedDate: parsed ? parsed.valueOf() : 0, item };
-    });
-  
-    stamped.sort((a, b) => (orderDesc ? b.__parsedDate - a.__parsedDate : a.__parsedDate - b.__parsedDate));
-  
-    return stamped.map(({ item }) => ({
-      title: item.title || '',
-      organization: item.issuer || '',
-      // show only issueDate (you requested expiry removed)
-      date: item.issueDate || item.issueDateISO || '',
-      location: item.credentialId ? `Credential ID: ${item.credentialId}` : '',
-      description: item.description || '',
-      highlights: item.skills || [],
-      __meta: { issueDateISO: item.issueDateISO }
-    }));
-  }, [certifications, orderDesc]);
-
-  const tabItems = useMemo(
-    () => [
-      { label: 'Experience', icon: <WorkIcon />, value: 0 },
-      { label: 'Education', icon: <SchoolIcon />, value: 1 },
-      { label: 'Skills', icon: <CodeIcon />, value: 2 },
-      { label: 'Certifications', icon: <AchievementsIcon />, value: 3 },
-    ],
-    []
-  );
-  
+  if (loading && timelineExperience.length === 0) {
+    return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+            <CircularProgress />
+        </Box>
+    );
+  }
 
   return (
-    <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, py: { xs: 2, sm: 3, md: 4 } }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-
-      </motion.div>
-
-      <Paper
-        elevation={1}
-        sx={{
-          borderRadius: 2,
-          overflow: 'hidden',
-          position: 'relative',
-          width: '100%',
-          background: isDark
-            ? 'linear-gradient(135deg, rgba(18,24,39,0.72), rgba(30,41,59,0.58))'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.65), rgba(245,247,250,0.55))',
-          backdropFilter: 'blur(14px) saturate(140%)',
-          border: `1px solid ${isDark ? 'rgba(144, 202, 249, 0.25)' : 'rgba(63, 81, 181, 0.18)'}`,
-          boxShadow: isDark
-            ? '0 20px 45px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02)'
-            : '0 16px 40px rgba(63,81,181,0.12), 0 0 0 1px rgba(255,255,255,0.6)',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `
-              linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-              linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: '28px 28px',
-            opacity: isDark ? 0.08 : 0.12,
-            pointerEvents: 'none',
-          },
-        }}
-      >
-        <Box
+    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 4 }, py: 4 }}>
+      {/* Header Area */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant={isMobile ? "scrollable" : "standard"}
+          scrollButtons="auto"
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            px: { xs: 1, sm: 2 },
-            pt: { xs: 1, sm: 1.5 },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: '3px 3px 0 0',
+              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+            }
           }}
         >
-          {isMobile ? (
-            <Box sx={{ flexGrow: 1 }}>
-              <Box
-                component="select"
-                value={tabValue}
-                onChange={(e) => handleTabChange(e as any, Number(e.target.value))}
-                aria-label="resume sections"
-                className="resume-tabs-select"
-                sx={{
-                  width: '100%',
-                  borderRadius: 12,
-                  px: 1.5,
-                  py: 1.2,
-                  border: `1px solid ${
-                    isDark ? 'rgba(255,255,255,0.15)' : 'rgba(63,81,181,0.25)'
-                  }`,
-                  backgroundColor: isDark ? 'rgba(22, 26, 33, 0.9)' : 'rgba(248, 249, 252, 0.95)',
-                  color: isDark ? '#eef6ff' : '#1f2937',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  fontSize: '0.9rem',
-                  boxShadow: isDark
-                    ? '0 10px 24px rgba(0,0,0,0.45)'
-                    : '0 10px 24px rgba(63,81,181,0.18)',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'none',
-                  backgroundImage:
-                    "url(\"data:image/svg+xml,%3csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236678ed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'calc(100% - 14px) center',
-                  backgroundSize: '14px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
-                  '&:focus': {
-                    borderColor: theme.palette.primary.main,
-                    boxShadow: `0 0 0 3px ${theme.palette.primary.main}33`,
-                    transform: 'translateY(-1px)',
-                  },
-                  '& option': {
-                    backgroundColor: isDark ? '#0f1419' : '#fff',
-                    color: isDark ? '#e8f2ff' : '#1f2937',
-                    fontWeight: 600,
-                    textTransform: 'none',
-                  },
-                }}
-              >
-                {tabItems.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </Box>
-            </Box>
-          ) : (
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons={false}
-              aria-label="resume sections"
-              TabIndicatorProps={{ children: <span className="MuiTabs-indicatorSpan" /> }}
-              sx={{
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 2,
-                px: { xs: 0.4, sm: 0.85 },
-                py: { xs: 0.1, sm: 0.5 },
-                backgroundColor: isDark
-                  ? 'rgba(22, 26, 33, 0.75)'
-                  : 'rgba(248, 249, 252, 0.8)',
-                backdropFilter: 'blur(8px)',
-                boxShadow: isDark
-                  ? '0 10px 30px rgba(0,0,0,0.35)'
-                  : '0 10px 30px rgba(63,81,181,0.12)',
-                '& .MuiTabs-indicator': {
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: 4,
-                  transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '& .MuiTabs-indicatorSpan': {
-                    width: '82%',
-                    maxWidth: 140,
-                    height: '100%',
-                    borderRadius: 999,
-                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${
-                      isDark ? '#7aa6ff' : '#5c6bc0'
-                    })`,
-                    boxShadow: `0 6px 18px ${theme.palette.primary.main}40`,
-                  },
-                },
-                minHeight: { xs: 38, md: 50 },
-                '& .MuiTab-root': {
-                  minHeight: { xs: 38, md: 50 },
-                  px: { xs: 0.75, sm: 1.4 },
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.07em',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                  flex: 1,
-                  maxWidth: 'unset',
-                  color: isDark ? 'rgba(255,255,255,0.78)' : 'rgba(0,0,0,0.74)',
-                  transition: 'color 0.25s ease, transform 0.25s ease, background 0.25s ease',
-                  borderRadius: 999,
-                  position: 'relative',
-                  '&:hover': {
-                    color: theme.palette.primary.main,
-                    transform: 'translateY(-2px)',
-                    background: isDark
-                      ? 'rgba(255,255,255,0.04)'
-                      : 'rgba(63,81,181,0.06)',
-                  },
-                  '&.Mui-selected': {
-                    color: isDark ? '#fff' : theme.palette.primary.main,
-                    textShadow: isDark ? '0 4px 18px rgba(124, 179, 255, 0.35)' : '0 4px 18px rgba(63, 81, 181, 0.35)',
-                  },
-                  '& .MuiTab-iconWrapper': {
-                    mr: 0.5,
-                    fontSize: '0.95rem',
-                  },
-                },
-                flexGrow: 1,
-                minWidth: 0,
-              }}
-            >
-              {tabItems.map((item) => (
-                <Tab
-                  key={item.value}
-                  icon={item.icon}
-                  label={item.label}
-                  {...a11yProps(item.value)}
-                />
-              ))}
-            </Tabs>
-          )}
+          <Tab icon={<WorkIcon fontSize="small"/>} iconPosition="start" label="Experience" {...tabProps} />
+          <Tab icon={<SchoolIcon fontSize="small"/>} iconPosition="start" label="Education" {...tabProps} />
+          <Tab icon={<CodeIcon fontSize="small"/>} iconPosition="start" label="Skills" {...tabProps} />
+          <Tab icon={<AchievementsIcon fontSize="small"/>} iconPosition="start" label="Certifications" {...tabProps} />
+        </Tabs>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+           <Button
+             startIcon={<DownloadIcon />}
+             variant="contained"
+             color="primary"
+             href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
+             download
+             sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
+           >
+             Download CV
+           </Button>
+        </Box>
+      </Box>
+
+      {/* Improved Sort Button */}
+      {tabValue !== 2 && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            sx={{ borderRadius: 8, whiteSpace: 'nowrap' }}
-            component="a"
-            href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
-            download
+            size="small"
+            startIcon={<SortIcon />}
+            variant="outlined"
+            onClick={() => setOrderDesc(!orderDesc)}
+            sx={{ 
+              textTransform: 'none', 
+              borderRadius: 4,
+              borderColor: alpha(theme.palette.text.secondary, 0.3),
+              color: theme.palette.text.secondary,
+              '&:hover': {
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+                bgcolor: alpha(theme.palette.primary.main, 0.05)
+              }
+            }}
           >
-            Download
+            {orderDesc ? "Newest First" : "Oldest First"}
           </Button>
         </Box>
+      )}
 
-        <TabPanel value={tabValue} index={0}>
-          <Paper
-            elevation={1}
-            sx={{
-              p: { xs: 2, sm: 3 },
-              borderRadius: 2,
-              height: '100%',
-              background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)',
-            }}
-          >
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-              <Button
-                onClick={() => setOrderDesc((s) => !s)}
-                size="small"
-                variant="outlined"
-                sx={{
-                  borderColor: theme.palette.primary.main,
-                  color: theme.palette.primary.main,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.dark,
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                {orderDesc ? "Newest first" : "Oldest first"}
-              </Button>
-            </Box>
-            <Timeline items={sortedExperience} />
-          </Paper>
-        </TabPanel>
+      {/* Content Area */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tabValue}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* TAB 0: EXPERIENCE */}
+          <TabPanel value={tabValue} index={0}>
+            <ExperienceAccordion items={timelineExperience} />
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={1}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-          <Button
-            onClick={() => setOrderDesc((s) => !s)}
-            size="small"
-            variant="outlined"
-            sx={{
-              borderColor: theme.palette.primary.main,
-              color: theme.palette.primary.main,
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              '&:hover': {
-                borderColor: theme.palette.primary.dark,
-                backgroundColor: theme.palette.action.hover,
-              },
-            }}
-          >
-              {orderDesc ? "Newest first" : "Oldest first"}
-            </Button>
-          </Box>
-          <Timeline items={sortedEducation} />
-        </TabPanel>
+          {/* TAB 1: EDUCATION */}
+          <TabPanel value={tabValue} index={1}>
+            <ModernTimeline items={timelineEducation} />
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={2}>
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2,
-                  height: '100%',
-                  background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)'
-                }}
-              >
-                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CodeIcon color="primary" sx={{ mr: 1 }} />
-                  Technical Skills
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Box sx={{ maxWidth: '100%', overflow: 'hidden' }}>
-                  {skillsData.technical && skillsData.technical.length > 0 ? (
-                    skillsData.technical.map((skill: any, index: number) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                      >
-                        <Skill name={skill.name} level={skill.level} />
-                      </motion.div>
-                    ))
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No technical skills added yet. Add skills via the admin panel.
+          {/* TAB 2: SKILLS */}
+          <TabPanel value={tabValue} index={2}>
+             <Grid container spacing={4}>
+               <Grid item xs={12} md={6}>
+                 <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CodeIcon color="primary" /> Technical Proficiency
                     </Typography>
-                  )}
-                </Box>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Paper 
-                elevation={1} 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  borderRadius: 2,
-                  height: '100%',
-                  background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)'
-                }}
-              >
-                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CodeIcon color="primary" sx={{ mr: 1 }} />
-                  Soft Skills
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Box sx={{ maxWidth: '100%', overflow: 'hidden' }}>
-                  {skillsData.softSkills && skillsData.softSkills.length > 0 ? (
-                    skillsData.softSkills.map((skill: any, index: number) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                      >
-                        <Skill name={skill.name} level={skill.level} />
-                      </motion.div>
-                    ))
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No soft skills added yet. Add skills via the admin panel.
+                    {technicalSkills.map((skill: any, i: number) => (
+                      <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
+                    ))}
+                 </Paper>
+               </Grid>
+               <Grid item xs={12} md={6}>
+                 <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AchievementsIcon color="secondary" /> Soft Skills
                     </Typography>
-                  )}
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        </TabPanel>
+                    {softSkills.map((skill: any, i: number) => (
+                      <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
+                    ))}
+                 </Paper>
+               </Grid>
+             </Grid>
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={3}>
-          <Paper
-            elevation={1}
-            sx={{
-              p: { xs: 2, sm: 3 },
-              borderRadius: 2,
-              height: '100%',
-              background: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)',
-            }}
-          >
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-              <Button
-                onClick={() => setOrderDesc((s) => !s)}
-                size="small"
-                variant="outlined"
-                sx={{
-                  borderColor: theme.palette.primary.main,
-                  color: theme.palette.primary.main,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  '&:hover': {
-                    borderColor: theme.palette.primary.dark,
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                {orderDesc ? "Newest first" : "Oldest first"}
-              </Button>
-            </Box>
-            <Timeline items={sortedCertifications} />
-          </Paper>
-        </TabPanel>
-
-      </Paper>
+          {/* TAB 3: CERTIFICATIONS */}
+          <TabPanel value={tabValue} index={3}>
+            <ModernTimeline items={timelineCertifications} />
+          </TabPanel>
+        </motion.div>
+      </AnimatePresence>
     </Box>
   );
 };
 
-export default Resume; 
+export default Resume;

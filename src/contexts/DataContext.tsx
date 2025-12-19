@@ -3,6 +3,7 @@ import portfolioData from '../data/portfolioData';
 import { database } from '../services/database';
 import { GuideSettings, defaultGuideSettings } from '../utils/storage';
 import { portfolioAPI } from '../services/api';
+import { fallbackResumeData } from '../data/fallbackResumeData';
 
 // Define context shape with precise typing
 interface DataContextType {
@@ -57,12 +58,21 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     setError(null);
     try {
       const response = await portfolioAPI.getAll();
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         // Merge API data with local portfolioData structure
         setData({
           ...portfolioData,
           ...response.data.data,
         });
+      } else {
+        // Use fallback data if API returns empty data or no success
+        setData({
+          ...portfolioData,
+          ...fallbackResumeData,
+        });
+        if (process.env.NODE_ENV === 'development') {
+          console.info('API returned empty data, using fallback portfolio data');
+        }
       }
     } catch (err: any) {
       // Only log errors if backend is actually running but returned an error
@@ -82,7 +92,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           console.info('Backend server not available, using local portfolio data');
         }
       }
-      // Keep using fallback data from portfolioData.ts
+      // Use fallback data
+      setData({
+        ...portfolioData,
+        ...fallbackResumeData,
+      });
     } finally {
       setLoading(false);
     }

@@ -32,7 +32,7 @@ const SolarSystemScene: React.FC = () => {
       color: '#f39c12',
       orbitRadius: 11,
       orbitSpeed: 0.0006,
-      route: '/resume#experience',
+      route: '/resume?resume=experience',
     },
     {
       name: 'Education',
@@ -40,7 +40,7 @@ const SolarSystemScene: React.FC = () => {
       color: '#9b59b6',
       orbitRadius: 14,
       orbitSpeed: 0.0005,
-      route: '/resume#education',
+      route: '/resume?resume=education',
     },
     {
       name: 'Skills',
@@ -48,7 +48,7 @@ const SolarSystemScene: React.FC = () => {
       color: '#1abc9c',
       orbitRadius: 17,
       orbitSpeed: 0.0004,
-      route: '/resume#skills',
+      route: '/resume?resume=skills',
     },
     {
       name: 'Contact',

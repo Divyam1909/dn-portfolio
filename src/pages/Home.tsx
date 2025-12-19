@@ -223,11 +223,11 @@ const Home: React.FC = () => {
                 <Grid item xs>
                   <Typography variant="body2" color="text.secondary">
                     Looking for a developer to build your next project? Check out my{' '}
-                    <Link component={RouterLink} to="/resume#skills" color="primary" underline="hover">
+                    <Link component={RouterLink} to="/resume?resume=skills" color="primary" underline="hover">
                       skills
                     </Link>{' '} 
                     and{' '} 
-                    <Link component={RouterLink} to="/resume#experience" color="primary" underline="hover">
+                    <Link component={RouterLink} to="/resume?resume=experience" color="primary" underline="hover">
                       experience
                     </Link>
                     !

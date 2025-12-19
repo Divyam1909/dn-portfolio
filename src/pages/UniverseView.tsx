@@ -21,10 +21,11 @@ import UniverseQuote from '../components/UniverseQuote';
 import CometCursor from '../components/CometCursor';
 
 interface UniverseViewProps {
-  toggleView: (options?: { preserveCurrentHash?: boolean }) => void;
+  toggleView: () => void;
+  navigateToRoute: (route: string) => void;
 }
 
-const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
+const UniverseView: React.FC<UniverseViewProps> = ({ toggleView, navigateToRoute }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -35,29 +36,9 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
   const [cameraDistance, setCameraDistance] = useState(45);
 
-  const setHashWithoutHistory = (hash: string | null, pathOverride?: string) => {
-    const basePath = pathOverride ?? `${window.location.pathname}${window.location.search}`;
-    const url = hash ? `${basePath}#${hash}` : basePath;
-    window.history.replaceState(null, '', url);
-  };
-
   const handlePlanetClick = (route: string) => {
-    // Switch to simplified view without altering the current history entry
-    toggleView({ preserveCurrentHash: true });
-    // Navigate to the route
-    // Note: React Router handles hash fragments in routes (e.g., /resume#experience)
-    navigate(route);
-    // Set hash to simplified after a brief delay to ensure navigation completes
-    // This preserves view state on refresh
-    setTimeout(() => {
-      // Extract the pathname without hash for the view hash
-      const pathname = route.split('#')[0];
-      // Set view hash only if we're navigating to a route without a section hash
-      // Routes with section hashes (like /resume#experience) will keep their hash
-      if (pathname === route) {
-        setHashWithoutHistory('simplified', route);
-      }
-    }, 100);
+    // Route-based navigation: leaving /universe automatically switches to simplified.
+    navigateToRoute(route);
   };
 
   // Hide hint after 5 seconds
@@ -87,8 +68,7 @@ const UniverseView: React.FC<UniverseViewProps> = ({ toggleView }) => {
         onCameraDistanceChange={handleCameraDistanceChange}
         onPlanetClick={handlePlanetClick}
         onSunClick={() => {
-          toggleView();
-          navigate('/');
+          navigateToRoute('/');
         }} // Add onSunClick handler
       />
 

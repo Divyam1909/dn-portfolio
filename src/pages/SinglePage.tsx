@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -56,7 +56,17 @@ const SinglePage: React.FC = () => {
     []
   );
 
+  // When the observer updates the URL based on scroll position, we do NOT want
+  // the "URL change -> scrollIntoView" effect to run (it causes fighting/jank).
   const skipScrollRef = useRef(false);
+
+  // Lock to prevent the observer from updating the URL while a smooth scroll is
+  // happening due to a user navigation (clicking a link / using back/forward).
+  const isManualScrolling = useRef(false);
+  const manualScrollUnlockTimeoutRef = useRef<number | null>(null);
+  const manualScrollUnlockIntervalRef = useRef<number | null>(null);
+  const scrollSpyDebounceTimeoutRef = useRef<number | null>(null);
+  const lastScrollSpySectionRef = useRef<SectionKey | null>(null);
 
   const sections = useMemo<SectionDefinition[]>(
     () => [
@@ -68,17 +78,6 @@ const SinglePage: React.FC = () => {
     ],
     [sectionRefs]
   );
-
-  const [sectionVisibility, setSectionVisibility] = useState<Record<SectionKey, number>>(() =>
-    sectionOrder.reduce(
-      (acc, key) => ({
-        ...acc,
-        [key]: 0,
-      }),
-      {} as Record<SectionKey, number>
-    )
-  );
-  const [activeSection, setActiveSection] = useState<SectionKey>(() => pathToSection(location.pathname));
 
   const scrollToSection = useCallback(
     (section: SectionKey) => {
@@ -104,6 +103,46 @@ const SinglePage: React.FC = () => {
     }
 
     const section = pathToSection(location.pathname);
+
+    // Treat a route change as a "manual navigation" and temporarily lock the
+    // scroll observer so it doesn't fight the smooth scroll animation.
+    isManualScrolling.current = true;
+    if (manualScrollUnlockTimeoutRef.current) {
+      window.clearTimeout(manualScrollUnlockTimeoutRef.current);
+    }
+    if (manualScrollUnlockIntervalRef.current) {
+      window.clearInterval(manualScrollUnlockIntervalRef.current);
+      manualScrollUnlockIntervalRef.current = null;
+    }
+    if (scrollSpyDebounceTimeoutRef.current) {
+      window.clearTimeout(scrollSpyDebounceTimeoutRef.current);
+      scrollSpyDebounceTimeoutRef.current = null;
+    }
+
+    // Unlock when scrolling settles (more reliable than a fixed timeout).
+    let lastY = window.scrollY;
+    let stableTicks = 0;
+    let elapsed = 0;
+    manualScrollUnlockIntervalRef.current = window.setInterval(() => {
+      const y = window.scrollY;
+      // Consider scroll "settled" if it hasn't changed meaningfully for ~200ms.
+      if (Math.abs(y - lastY) < 2) {
+        stableTicks += 1;
+      } else {
+        stableTicks = 0;
+      }
+      lastY = y;
+      elapsed += 50;
+
+      if (stableTicks >= 4 || elapsed >= 2000) {
+        if (manualScrollUnlockIntervalRef.current) {
+          window.clearInterval(manualScrollUnlockIntervalRef.current);
+          manualScrollUnlockIntervalRef.current = null;
+        }
+        isManualScrolling.current = false;
+      }
+    }, 50);
+
     const timer = window.setTimeout(() => {
       scrollToSection(section);
     }, 50);
@@ -112,63 +151,98 @@ const SinglePage: React.FC = () => {
   }, [location.pathname, scrollToSection]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const section = entry.target.getAttribute('data-section') as SectionKey | null;
-          if (!section) return;
-
-          // Calculate visibility ratio (0 to 1) based on intersection ratio
-          const visibilityRatio = Math.min(entry.intersectionRatio * 1.5, 1);
-          
-          setSectionVisibility((prev) => {
-            if (prev[section] !== visibilityRatio) {
-              return { ...prev, [section]: visibilityRatio };
-            }
-            return prev;
-          });
-        });
-      },
-      {
-        threshold: Array.from({ length: 21 }, (_, i) => i * 0.05), // 0, 0.05, 0.1, ..., 1
-        rootMargin: '-5% 0px -5% 0px',
+    // Legacy support: "/resume#skills" -> "/resume?resume=skills"
+    if (location.pathname === '/resume' && location.hash) {
+      const legacy = location.hash.replace('#', '').toLowerCase();
+      const allowed = new Set(['experience', 'education', 'skills', 'certifications']);
+      if (allowed.has(legacy)) {
+        const params = new URLSearchParams(location.search);
+        params.set('resume', legacy);
+        navigate({ pathname: '/resume', search: `?${params.toString()}` }, { replace: true });
       }
-    );
+    }
+  }, [location.pathname, location.search, location.hash, navigate]);
 
-    sectionOrder.forEach((key) => {
-      const target = sectionRefs[key]?.current;
-      if (target) observer.observe(target);
+  useEffect(() => {
+    const observerOptions: IntersectionObserverInit = {
+      // Use a single threshold. 0.5 means the middle of the section must be visible.
+      // This reduces churn and avoids the old 21-threshold "jank".
+      threshold: 0.5,
+      // Adding a margin helps prevent "fighting" near section edges.
+      rootMargin: '-10% 0px -10% 0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      // If we are currently scrolling because a user clicked a nav link (or used
+      // back/forward), DON'T update the URL based on scroll position.
+      if (isManualScrolling.current) return;
+
+      const intersecting = entries.filter((e) => e.isIntersecting);
+      if (!intersecting.length) return;
+
+      // If multiple sections intersect, choose the one most visible.
+      const best = intersecting.reduce((a, b) =>
+        b.intersectionRatio > a.intersectionRatio ? b : a
+      );
+
+      const sectionKey = best.target.getAttribute('data-section') as SectionKey | null;
+      if (!sectionKey) return;
+
+      // Debounce scroll-spy updates so UI-driven layout shifts (like accordions)
+      // don't cause rapid URL changes.
+      if (lastScrollSpySectionRef.current !== sectionKey) {
+        lastScrollSpySectionRef.current = sectionKey;
+      }
+
+      if (scrollSpyDebounceTimeoutRef.current) {
+        window.clearTimeout(scrollSpyDebounceTimeoutRef.current);
+      }
+
+      scrollSpyDebounceTimeoutRef.current = window.setTimeout(() => {
+        if (isManualScrolling.current) return;
+
+        const currentSection = lastScrollSpySectionRef.current;
+        if (!currentSection) return;
+
+        const basePath = currentSection === 'home' ? '/' : `/${currentSection}`;
+        const nextSearch = currentSection === 'resume' ? location.search : '';
+        const nextUrl = `${basePath}${nextSearch}`;
+        const currentUrl = `${location.pathname}${location.search}`;
+
+        // Only navigate if the path actually changed to avoid redundant re-renders
+        if (currentUrl !== nextUrl) {
+          // Prevent the "URL change -> scrollIntoView" effect from firing for
+          // scroll-driven URL updates.
+          skipScrollRef.current = true;
+          // Use { replace: true } to keep the browser history clean
+          navigate(nextUrl, { replace: true });
+        }
+      }, 120);
+    }, observerOptions);
+
+    // Register all refs
+    [homeRef, aboutRef, resumeRef, projectsRef, contactRef].forEach((ref) => {
+      if (ref.current) observer.observe(ref.current);
     });
 
-    return () => observer.disconnect();
-  }, [sectionRefs]);
+    return () => {
+      observer.disconnect();
+      if (scrollSpyDebounceTimeoutRef.current) {
+        window.clearTimeout(scrollSpyDebounceTimeoutRef.current);
+      }
+    };
+  }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
-    const visibilityEntries = Object.entries(sectionVisibility) as [SectionKey, number][];
-    if (!visibilityEntries.length) return;
-
-    const [nextSection, visibility] = visibilityEntries.reduce<[SectionKey, number]>(
-      (max, entry) => (entry[1] > max[1] ? entry : max),
-      visibilityEntries[0]
-    );
-
-    if (visibility <= 0) return;
-    if (nextSection !== activeSection) {
-      setActiveSection(nextSection);
-    }
-  }, [sectionVisibility, activeSection]);
-
-  useEffect(() => {
-    const currentSection = pathToSection(location.pathname);
-    if (activeSection === currentSection) return;
-
-    const basePath = activeSection === 'home' ? '/' : `/${activeSection}`;
-    const hash = activeSection === 'resume' ? location.hash : '';
-    const nextUrl = `${basePath}${hash}`;
-
-    skipScrollRef.current = true;
-    navigate(nextUrl, { replace: true });
-  }, [activeSection, location.pathname, location.hash, navigate]);
+    return () => {
+      if (manualScrollUnlockTimeoutRef.current) {
+        window.clearTimeout(manualScrollUnlockTimeoutRef.current);
+      }
+      if (manualScrollUnlockIntervalRef.current) {
+        window.clearInterval(manualScrollUnlockIntervalRef.current);
+      }
+    };
+  }, []);
 
   const sectionProps = {
     sx: {
@@ -176,6 +250,122 @@ const SinglePage: React.FC = () => {
       width: '100%',
       minHeight: '60vh',
     },
+  };
+
+  const BlackHoleSeparator: React.FC = () => {
+    // Keep original yellow/orange separator palette (not theme-driven).
+    const lineColor = 'rgba(255, 180, 50, 0.8)';
+    const glowColor = 'rgba(255, 100, 0, 0.4)';
+    const ringColor = 'rgba(255, 180, 50, 0.7)';
+
+    return (
+      <Box
+        aria-hidden="true"
+        sx={{
+          position: 'relative',
+          width: '100%',
+          // Separator-only: keep compact height, no background panel.
+          height: { xs: 90, md: 110 },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'transparent',
+          cursor: 'default',
+          '@keyframes bhPulse': {
+            '0%, 100%': { transform: 'scale(1)', opacity: 0.5 },
+            '50%': { transform: 'scale(1.1)', opacity: 0.7 },
+          },
+          '@keyframes bhSpin': {
+            from: { transform: 'rotateX(78deg) rotateZ(0deg)' },
+            to: { transform: 'rotateX(78deg) rotateZ(360deg)' },
+          },
+          '& .bh-line-container': {
+            position: 'absolute',
+            width: '100%',
+            height: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1,
+            pointerEvents: 'none',
+          },
+          '& .bh-line-segment': {
+            flex: 1,
+            height: '2px',
+            boxShadow: `0 0 12px ${glowColor}`,
+          },
+          '& .bh-line-left': {
+            background: `linear-gradient(90deg, transparent 0%, ${lineColor} 100%)`,
+          },
+          '& .bh-line-right': {
+            background: `linear-gradient(90deg, ${lineColor} 0%, transparent 100%)`,
+          },
+          '& .bh-gap': {
+            width: { xs: 72, md: 96 },
+            flexShrink: 0,
+          },
+          '& .bh-core-wrap': {
+            position: 'relative',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          '& .bh-lensing': {
+            position: 'absolute',
+            width: { xs: 110, md: 130 },
+            height: { xs: 110, md: 130 },
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle, rgba(255, 100, 0, 0.12) 0%, transparent 70%)',
+            filter: 'blur(22px)',
+            animation: 'bhPulse 5s ease-in-out infinite',
+            opacity: 0.55,
+          },
+          '& .bh-disk': {
+            position: 'absolute',
+            width: { xs: 64, md: 72 },
+            height: { xs: 64, md: 72 },
+            borderRadius: '50%',
+            border: `1.5px solid ${ringColor}`,
+            boxShadow: `0 0 20px rgba(255, 150, 0, 0.5), inset 0 0 20px rgba(255, 150, 0, 0.3)`,
+            transform: 'rotateX(78deg)',
+            animation: 'bhSpin 12s linear infinite',
+          },
+          '& .bh-event-horizon': {
+            position: 'absolute',
+            width: { xs: 32, md: 36 },
+            height: { xs: 32, md: 36 },
+            borderRadius: '50%',
+            background: '#000',
+            border: '1.5px solid #fff',
+            boxShadow: '0 0 8px #fff, 0 0 25px #ff7b00, 0 0 60px #ff4800',
+            zIndex: 5,
+          },
+          '& .bh-singularity': {
+            position: 'absolute',
+            width: { xs: 28, md: 32 },
+            height: { xs: 28, md: 32 },
+            borderRadius: '50%',
+            background: '#000',
+            zIndex: 6,
+          },
+        }}
+      >
+        <Box className="bh-line-container">
+          <Box className="bh-line-segment bh-line-left" />
+          <Box className="bh-gap" />
+          <Box className="bh-line-segment bh-line-right" />
+        </Box>
+
+        <Box className="bh-core-wrap">
+          <Box className="bh-lensing" />
+          <Box className="bh-disk" />
+          <Box className="bh-event-horizon" />
+          <Box className="bh-singularity" />
+        </Box>
+      </Box>
+    );
   };
 
   return (
@@ -201,10 +391,6 @@ const SinglePage: React.FC = () => {
     >
       {sections.map((section, index) => {
         const { key, label, Component, ref } = section;
-        const visibility = sectionVisibility[key];
-        const opacity = Math.pow(visibility, 0.7); // Smooth easing
-        const translateY = (1 - visibility) * 40;
-        const scale = 0.95 + visibility * 0.05;
 
         return (
           <React.Fragment key={key}>
@@ -227,10 +413,10 @@ const SinglePage: React.FC = () => {
             >
               <Box
                 sx={{
-                  opacity: opacity,
-                  transform: `translateY(${translateY}px) scale(${scale})`,
-                  transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
-                  willChange: 'opacity, transform',
+                  // Keep sections static to prevent UI instability during
+                  // dynamic height changes (e.g., accordions expanding).
+                  opacity: 1,
+                  transform: 'none',
                 }}
               >
                 {/* Section Title with Gradient Effect */}
@@ -287,13 +473,13 @@ const SinglePage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Modern Section Divider */}
+            {/* Black Hole Separator */}
             {index < sections.length - 1 && (
               <Box
                 sx={{
                   width: '100%',
-                  px: { xs: 3, md: 6 },
-                  py: { xs: 1, md: 2 },
+                  px: { xs: 0, md: 0 },
+                  py: { xs: 2, md: 3 },
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -301,58 +487,7 @@ const SinglePage: React.FC = () => {
                   zIndex: 1,
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: '800px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {/* Gradient Line */}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      width: '100%',
-                      height: '2px',
-                      background: `linear-gradient(90deg, 
-                        transparent 0%, 
-                        ${theme.palette.primary.main}40 25%,
-                        ${theme.palette.primary.main} 50%,
-                        ${theme.palette.primary.main}40 75%,
-                        transparent 100%)`,
-                      boxShadow: `0 0 20px ${theme.palette.primary.main}30`,
-                      borderRadius: '999px',
-                    }}
-                  />
-                  
-                  {/* Center Dot */}
-                  <Box
-                    sx={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      background: theme.palette.primary.main,
-                      boxShadow: `0 0 24px ${theme.palette.primary.main}80,
-                                  inset 0 0 8px ${theme.palette.primary.light}`,
-                      zIndex: 1,
-                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      '@keyframes pulse': {
-                        '0%, 100%': {
-                          opacity: 1,
-                          transform: 'scale(1)',
-                        },
-                        '50%': {
-                          opacity: 0.8,
-                          transform: 'scale(1.1)',
-                        },
-                      },
-                    }}
-                  />
-                </Box>
+                <BlackHoleSeparator />
               </Box>
             )}
           </React.Fragment>

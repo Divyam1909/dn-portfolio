@@ -58,7 +58,7 @@ const RealSolarSystem: React.FC = () => {
       orbitRadius: 15.2,
       orbitSpeed: 0.00053, // 687 Earth days
       rotationSpeed: 0.009,
-      route: '/resume#experience',
+      route: '/resume?resume=experience',
       description: 'Experience',
       features: { desert: true }
     },
@@ -70,7 +70,7 @@ const RealSolarSystem: React.FC = () => {
       orbitRadius: 25,
       orbitSpeed: 0.000084, // 12 Earth years
       rotationSpeed: 0.02, // Fastest rotation
-      route: '/resume#education',
+      route: '/resume?resume=education',
       description: 'Education',
       features: { gasGiant: true, storms: true }
     },
@@ -82,7 +82,7 @@ const RealSolarSystem: React.FC = () => {
       orbitRadius: 35,
       orbitSpeed: 0.000034, // 29 Earth years
       rotationSpeed: 0.018,
-      route: '/resume#skills',
+      route: '/resume?resume=skills',
       description: 'Skills',
       hasRings: true,
       features: { gasGiant: true, rings: true }
@@ -95,7 +95,7 @@ const RealSolarSystem: React.FC = () => {
       orbitRadius: 45,
       orbitSpeed: 0.000012, // 84 Earth years
       rotationSpeed: 0.012,
-      route: '/resume#certifications',
+      route: '/resume?resume=certifications',
       description: 'Certifications',
       features: { iceGiant: true, tilted: true }
     },

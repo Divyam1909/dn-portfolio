@@ -33,7 +33,7 @@ import FlowingHeader from './FlowingHeader';
 interface LayoutProps {
   children: ReactNode;
   toggleTheme: () => void;
-  toggleView: (options?: { preserveCurrentHash?: boolean }) => void; // Add toggleView prop
+  toggleView: () => void;
   setLastPathFromUniverseView: (path: string | null) => void;
   lastPathFromUniverseView: string | null;
 }
@@ -85,14 +85,15 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
         const numKey = parseInt(e.key);
         if (!isNaN(numKey) && numKey > 0 && numKey <= navItems.length) {
           e.preventDefault();
-          navigate(navItems[numKey - 1].path);
+          const path = navItems[numKey - 1].path;
+          navigate(path);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, location.hash]);
 
   // Prefetch routes when hovering over links
   const handlePrefetch = (path: string) => {
@@ -361,7 +362,8 @@ const Layout: React.FC<LayoutProps> = ({ children, toggleTheme, toggleView, setL
               style={{ 
                 height: '100%',
                 width: '100%',
-                overflow: 'hidden'
+                // Allow expanding content (e.g., Resume accordions) to render without being clipped.
+                overflow: 'visible'
               }}
             >
               {children}
