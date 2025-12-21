@@ -174,7 +174,17 @@ const Contact: React.FC = () => {
   const websiteRaw = typeof socialLinks.website === 'string' ? socialLinks.website.trim() : '';
   const isDeprecatedWebsite = /pages\.dev/i.test(websiteRaw);
   const portfolioUrlFull = !websiteRaw || isDeprecatedWebsite ? CANONICAL_WEBSITE_URL : websiteRaw;
-  const portfolioUrl = portfolioUrlFull.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const portfolioUrlHost = portfolioUrlFull.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const shortenMiddle = (text: string, maxLen: number) => {
+    if (!text) return '';
+    if (text.length <= maxLen) return text;
+    // Keep the end visible (e.g. "vercel.app") and trim from the middle for a natural "URL bar" feel.
+    const ellipsis = '…';
+    const tailLen = Math.min(10, Math.max(0, maxLen - 6)); // bias toward preserving the end
+    const headLen = Math.max(0, maxLen - tailLen - ellipsis.length);
+    return `${text.slice(0, headLen)}${ellipsis}${text.slice(-tailLen)}`;
+  };
+  const portfolioUrl = shortenMiddle(portfolioUrlHost, 24);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
