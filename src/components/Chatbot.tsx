@@ -63,13 +63,39 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${CHATBOT_URL}/chat`, {
+      // Normalize endpoint to avoid common misconfigurations like:
+      // - base ends with "/"  -> double slashes
+      // - base already ends with "/chat" -> "/chat/chat"
+      const base = String(CHATBOT_URL).replace(/\/$/, '');
+      const endpoint = base.endsWith('/chat') ? base : `${base}/chat`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ question: input }),
       });
+
+      const contentType = response.headers.get('content-type') || '';
+
+      // If the server responds with non-2xx (e.g. 404 "Not Found"),
+      // don't try to JSON-parse it blindly.
+      if (!response.ok) {
+        const bodyText = await response.text().catch(() => '');
+        throw new Error(
+          `Chatbot request failed: ${response.status} ${response.statusText} at ${endpoint}. ` +
+          `Response: ${bodyText.slice(0, 200)}`
+        );
+      }
+
+      if (!contentType.toLowerCase().includes('application/json')) {
+        const bodyText = await response.text().catch(() => '');
+        throw new Error(
+          `Chatbot returned non-JSON response at ${endpoint}. ` +
+          `content-type="${contentType}". Response: ${bodyText.slice(0, 200)}`
+        );
+      }
 
       const data = await response.json();
       const botMessage: Message = { text: data.answer, sender: 'bot' };
