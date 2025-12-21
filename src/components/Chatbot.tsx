@@ -107,8 +107,16 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      const errText = error instanceof Error ? error.message : String(error);
+      const isQuota =
+        /quota/i.test(errText) ||
+        /rate limit/i.test(errText) ||
+        /\b429\b/.test(errText);
+
       const errorMessage: Message = { 
-        text: 'Sorry, I\'m having trouble connecting right now. Please try again in a moment! 🤖', 
+        text: isQuota
+          ? 'Pixel is temporarily busy (rate limit reached). Please try again in a bit. 🤖'
+          : 'Sorry, I\'m having trouble connecting right now. Please try again in a moment! 🤖',
         sender: 'bot' 
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);

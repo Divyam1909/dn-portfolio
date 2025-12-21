@@ -159,6 +159,24 @@ const corsHeaders = {
 
 export default {
   async fetch(request, env) {
+    // Hard fail early if not configured (prevents silent "default" answers)
+    if (!env || !env.GEMINI_API_KEY) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'Chatbot is not configured: missing GEMINI_API_KEY. Set it with `npx wrangler secret put GEMINI_API_KEY` and redeploy.',
+          animation: 'No',
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
@@ -173,16 +191,16 @@ export default {
     try {
       const { question } = await request.json();
 
-      // Call Gemini API directly
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{
-                text: `You are Pixel — Divyam's confident and personable AI assistant. Your job is to showcase Divyam as the impressive candidate he is, while sounding natural and conversational — like a proud friend who knows all about his achievements.
+      const MODEL_FALLBACKS = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3-flash',
+      ];
+
+      const requestPayload = {
+        systemInstruction: {
+          parts: [{
+            text: `You are Pixel — Divyam's confident and personable AI assistant. Your job is to showcase Divyam as the impressive candidate he is, while sounding natural and conversational — like a proud friend who knows all about his achievements.
 
 PERSONALITY:
 - Confident but not arrogant
@@ -262,25 +280,142 @@ A: 9.74 in his second year, up from 9.5 in his first — so he's not just smart,
 
 Q: Is he good for a startup?
 A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, and has hands-on experience across tech and marketing. He understands both building products and growing them.`
-              }]
-            },
-            contents: [{
-              role: 'user',
-              parts: [{ text: question }]
-            }],
-            generationConfig: {
-              maxOutputTokens: 250,
-              temperature: 0.7
-            }
-          })
+          }]
+        },
+        contents: [{
+          role: 'user',
+          parts: [{ text: question }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 250,
+          temperature: 0.7
         }
-      );
+      };
 
-      const data = await response.json();
+      const isQuotaError = (msg, status) => {
+        const msgLower = String(msg || '').toLowerCase();
+        return (
+          msgLower.includes('exceeded your current quota') ||
+          msgLower.includes('quota') ||
+          msgLower.includes('rate limit') ||
+          msgLower.includes('rate-limit') ||
+          status === 429
+        );
+      };
+
+      const callGemini = async (model) => {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestPayload),
+          }
+        );
+
+        const rawText = await response.text();
+        let json;
+        try {
+          json = JSON.parse(rawText);
+        } catch (e) {
+          return {
+            ok: false,
+            status: response.status,
+            error: `Gemini returned non-JSON (${response.status}) for ${model}: ${String(rawText).slice(0, 300)}`,
+            isQuota: false,
+          };
+        }
+
+        if (!response.ok) {
+          const msg =
+            json?.error?.message ||
+            json?.message ||
+            `Gemini API error (${response.status})`;
+          return {
+            ok: false,
+            status: response.status,
+            error: msg,
+            isQuota: isQuotaError(msg, response.status),
+          };
+        }
+
+        return { ok: true, status: response.status, data: json };
+      };
+
+      // Try models in order. If all fail, return a rate-limit style error (as requested).
+      let data = null;
+      let lastErr = null;
+      for (const model of MODEL_FALLBACKS) {
+        const attempt = await callGemini(model);
+        if (attempt.ok) {
+          data = attempt.data;
+          lastErr = null;
+          break;
+        }
+
+        // If this is a quota/rate-limit error, stop immediately (fallbacks won't help).
+        if (attempt.isQuota) {
+          return new Response(
+            JSON.stringify({
+              error:
+                'Chatbot is temporarily unavailable (Gemini quota/rate limit reached). Please try again later.',
+              detail: String(attempt.error).slice(0, 500),
+              animation: 'No',
+            }),
+            {
+              status: 429,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders,
+              },
+            }
+          );
+        }
+
+        lastErr = `Model ${model} failed: ${String(attempt.error).slice(0, 500)}`;
+      }
+
+      if (!data) {
+        return new Response(
+          JSON.stringify({
+            error:
+              'Chatbot is temporarily unavailable (all Gemini model attempts failed). Please try again later.',
+            detail: lastErr || 'Unknown error',
+            animation: 'No',
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders,
+            },
+          }
+        );
+      }
       
       let rawAnswer = "I'm Pixel, Divyam's assistant! How can I help?";
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        rawAnswer = data.candidates[0].content.parts[0].text;
+
+      // Robust extraction: join all text parts if present
+      const parts = data?.candidates?.[0]?.content?.parts;
+      if (Array.isArray(parts)) {
+        const joined = parts
+          .map((p) => (typeof p?.text === 'string' ? p.text : ''))
+          .filter(Boolean)
+          .join('')
+          .trim();
+        if (joined) rawAnswer = joined;
+      }
+
+      // Surface safety blocks instead of silently falling back
+      if (
+        rawAnswer === "I'm Pixel, Divyam's assistant! How can I help?" &&
+        (data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason)
+      ) {
+        const why =
+          data?.promptFeedback?.blockReason ||
+          data?.candidates?.[0]?.finishReason ||
+          'unknown';
+        rawAnswer = `I couldn't answer that request (reason: ${why}). Try rephrasing your question.`;
       }
 
       const answer = enforceIdentity(rawAnswer);
