@@ -521,7 +521,6 @@ const Robot3D = forwardRef<Robot3DHandle, Robot3DProps>(({ onRobotClick, isDarkM
             transform: 'translate(-50%, -50%)',
             textAlign: 'center',
             zIndex: 10,
-            color: isDarkMode ? '#90CAF9' : '#5C6BC0',
             pointerEvents: 'none',
           }}
         >
@@ -529,16 +528,14 @@ const Robot3D = forwardRef<Robot3DHandle, Robot3DProps>(({ onRobotClick, isDarkM
             style={{
               width: '50px',
               height: '50px',
-              border: '5px solid rgba(144, 202, 249, 0.2)',
-              borderTop: `5px solid ${isDarkMode ? '#90CAF9' : '#5C6BC0'}`,
+              border: '5px solid rgba(255, 230, 0, 0.18)',
+              borderTop: '5px solid #ffe600',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite',
               margin: '0 auto 20px',
+              boxShadow: '0 0 18px rgba(255, 230, 0, 0.55), 0 0 48px rgba(255, 230, 0, 0.25)',
             }}
           />
-          <p style={{ fontWeight: 500, fontSize: '14px', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-            Loading AI Assistant...
-          </p>
           <style>
             {`
               @keyframes spin {

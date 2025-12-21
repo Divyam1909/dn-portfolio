@@ -8,6 +8,11 @@ compatibility_date = "2024-01-01"
 
 [vars]
 # Non-secret environment variables can go here
+#
+# Optional (resume context):
+# - Host your resume PDF publicly (your React app already serves it at /uploads/divyam_resume.pdf)
+# - Set the FULL deployed URL here so the Worker can fetch and attach it privately:
+#   RESUME_PDF_URL="https://your-site.com/uploads/divyam_resume.pdf"
 
 # Production environment
 [env.production]

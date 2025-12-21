@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, CircularProgress, Box, Typography } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useThemeToggle } from './hooks/useThemeToggle';
 import { DataProvider, usePortfolioData } from './contexts/DataContext';
@@ -14,28 +14,38 @@ const BackgroundParticles = lazy(() => import('./components/BackgroundParticles'
 const SinglePage = lazy(() => import('./pages/SinglePage'));
 const UniverseView = lazy(() => import('./pages/UniverseView'));
 
+const VIEW_STORAGE_KEY = 'portfolio:lastView';
+const VIEW_UNIVERSE = 'universe';
+const VIEW_SIMPLIFIED = 'simplified';
+
 // Loading fallback
 const LoadingFallback = () => (
   <Box
     sx={{
       display: 'flex',
-      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 2,
       height: '100vh',
-      color: 'rgba(255,255,255,0.9)',
-      background:
-        'radial-gradient(1200px 800px at 50% 30%, rgba(56,189,248,0.10) 0%, rgba(139,92,246,0.08) 35%, rgba(2,6,23,1) 75%)',
+      width: '100vw',
+      background: '#000',
+      '@keyframes globalSpin': {
+        from: { transform: 'rotate(0deg)' },
+        to: { transform: 'rotate(360deg)' },
+      },
     }}
   >
-    <Typography sx={{ fontWeight: 700, letterSpacing: 0.5 }}>
-      Loading Universe…
-    </Typography>
-    <CircularProgress size={28} sx={{ color: 'rgba(255,255,255,0.85)' }} />
-    <Typography variant="body2" sx={{ opacity: 0.75, maxWidth: 520, textAlign: 'center', px: 3 }}>
-      First load can take a few seconds while 3D assets and textures download.
-    </Typography>
+    <Box
+      aria-label="Loading"
+      sx={{
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        border: '4px solid rgba(255, 230, 0, 0.18)',
+        borderTopColor: '#ffe600',
+        boxShadow: '0 0 18px rgba(255, 230, 0, 0.55), 0 0 48px rgba(255, 230, 0, 0.25)',
+        animation: 'globalSpin 0.9s linear infinite',
+      }}
+    />
   </Box>
 );
 
@@ -57,7 +67,9 @@ const RoutingHandler: React.FC<{
     isFirstLoadRef.current = false;
 
     const hash = window.location.hash;
-    if (location.pathname === '/' && !hash) {
+    const lastView = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    // If the user last chose Simplified view, do NOT force "/" -> "/universe" on refresh.
+    if (location.pathname === '/' && !hash && lastView !== VIEW_SIMPLIFIED) {
       navigate('/universe', { replace: true, state: { from: '/' } });
     }
   }, [location.pathname, navigate]);
@@ -106,6 +118,7 @@ const RoutingHandler: React.FC<{
     // Capture the current route at click time (more reliable than relying on
     // a ref that may be updated by scroll-spy during smooth scroll).
     const from = `${location.pathname}${location.search}` || lastSimplifiedPathRef.current || '/';
+    window.localStorage.setItem(VIEW_STORAGE_KEY, VIEW_UNIVERSE);
     navigate('/universe', { state: { from } });
   }, [location.pathname, location.search, navigate]);
 
@@ -113,6 +126,7 @@ const RoutingHandler: React.FC<{
     (routeOverride?: string) => {
       const from = (location.state as any)?.from as string | undefined;
       const destination = routeOverride ?? from ?? lastSimplifiedPathRef.current ?? '/';
+      window.localStorage.setItem(VIEW_STORAGE_KEY, VIEW_SIMPLIFIED);
       navigate(destination);
     },
     [location.state, navigate]

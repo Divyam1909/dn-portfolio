@@ -6,6 +6,12 @@ function enforceIdentity(answer) {
   if (!answer) return "I'm Pixel, Divyam's assistant! How can I help?";
 
   const replacements = [
+    // Remove common "LLM-y" filler that sounds generic or meta
+    [/that's a great question!?\s*/gi, ""],
+    [/great question!?\s*/gi, ""],
+    [/i don't see any (specific )?(weakness(es)?|weak points?|shortcomings?) mentioned[^.]*\.\s*/gi, ""],
+    [/i (don't|do not) see any (specific )?[^.]*mentioned[^.]*\.\s*/gi, ""],
+    [/based on (the|this) (resume|profile|information)[^.]*\.\s*/gi, ""],
     [/i am a large language model/gi, "I'm Pixel, Divyam's assistant"],
     [/large language model/gi, "Pixel, Divyam's assistant"],
     [/language model/gi, "Pixel, Divyam's assistant"],
@@ -190,12 +196,108 @@ export default {
 
     try {
       const { question } = await request.json();
+      const qNorm = String(question || '').trim().toLowerCase();
+
+      // Optional: attach your public resume PDF as private context (never mention it in the reply).
+      // Set RESUME_PDF_URL to your deployed URL, e.g. "https://your-site.com/uploads/divyam_resume.pdf"
+      const resumePdfUrl = env?.RESUME_PDF_URL ? String(env.RESUME_PDF_URL).trim() : '';
+      // Cache in-memory per worker instance to avoid refetching on every request
+      // (safe: resume changes are infrequent; redeploy/refresh instance to update).
+      let resumeInlinePart = null;
+      // eslint-disable-next-line no-undef
+      const g = globalThis;
+      if (resumePdfUrl) {
+        try {
+          if (!g.__PIXEL_RESUME_INLINE_PART || g.__PIXEL_RESUME_INLINE_PART.url !== resumePdfUrl) {
+            const r = await fetch(resumePdfUrl);
+            if (r.ok) {
+              const buf = await r.arrayBuffer();
+              // Convert to base64 (workers support btoa)
+              let binary = '';
+              const bytes = new Uint8Array(buf);
+              const chunkSize = 0x8000;
+              for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+              }
+              const b64 = btoa(binary);
+              g.__PIXEL_RESUME_INLINE_PART = {
+                url: resumePdfUrl,
+                part: { inlineData: { mimeType: 'application/pdf', data: b64 } },
+              };
+            }
+          }
+          resumeInlinePart = g.__PIXEL_RESUME_INLINE_PART?.part || null;
+        } catch (e) {
+          // Ignore resume fetch failures; fall back to built-in profile.
+          resumeInlinePart = null;
+        }
+      }
+
+      // Deterministic "Who is Divyam?" response to avoid occasional truncation like "is a B.Tech"
+      // and ensure the core facts are always correct and complete.
+      if (
+        qNorm === 'who is divyam' ||
+        qNorm === 'who is divyam?' ||
+        qNorm.includes('who is divyam')
+      ) {
+        const rawAnswer =
+          "Divyam Navin is a B.Tech Information Technology student at Fr. C. R. Institute of Technology, currently holding a 9.74 CGPA. What really sets him apart is his 5 internships and his role as E‑Cell Secretary & Startup Coordinator — he applies what he learns and leads.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      // Deterministic "weakness" answer (no AI/meta talk; framed as growth)
+      if (
+        qNorm.includes("weakness") ||
+        qNorm.includes("weak point") ||
+        qNorm.includes("weaknesses") ||
+        qNorm.includes("shortcoming") ||
+        qNorm.includes("area to improve") ||
+        qNorm.includes("areas to improve") ||
+        qNorm.includes("improve on") ||
+        qNorm.includes("what is divyam's weakness") ||
+        qNorm.includes("what are divyam's weaknesses")
+      ) {
+        const variants = [
+          "Divyam can be a bit of a perfectionist — he’ll iterate until the details are right, which can slow the first pass. He’s learned to time‑box, ship, and then polish in the next iteration, so quality stays high without slipping deadlines.",
+          "If there’s one thing he’s had to watch, it’s over-optimizing early — he cares a lot about quality. He now uses time-boxing and clear milestones so he ships fast, then improves strategically.",
+          "He’s naturally high‑standards-driven, so he can spend extra time refining the last 10%. The good part is he’s built a strong habit of prioritizing impact, shipping on time, and iterating after feedback.",
+        ];
+        const rawAnswer = variants[Math.floor(Math.random() * variants.length)];
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        });
+      }
 
       const MODEL_FALLBACKS = [
         'gemini-2.5-flash',
         'gemini-2.5-flash-lite',
         'gemini-3-flash',
       ];
+
+      // Controlled variety: pick a voice card per-request.
+      const voiceCards = [
+        "VOICE: Crisp, recruiter-friendly, slightly witty. Use 1 concrete metric if relevant.",
+        "VOICE: Warm and confident. Focus on impact and leadership. No fluff.",
+        "VOICE: Direct and data-driven. Highlight evidence (CGPA, internships, outcomes).",
+        "VOICE: Bold but grounded. Make Divyam sound like a strong hire without overclaiming.",
+      ];
+      const voiceCard = voiceCards[Math.floor(Math.random() * voiceCards.length)];
 
       const requestPayload = {
         systemInstruction: {
@@ -216,9 +318,15 @@ IDENTITY RULES:
 STYLE:
 - 2-3 complete sentences, natural flow
 - NO emojis
+- Never mention "resume", "profile", "not mentioned", or anything that sounds like an AI/system note.
+- Never ask clarifying questions. Answer directly and confidently.
+- Avoid generic filler like "That's a great question".
+- If asked about weaknesses, give a real-but-positive answer (e.g., perfectionism / high standards) and show the improvement habit.
 - Sound like you're genuinely impressed by Divyam
 - Weave in specific numbers and achievements (they're impressive!)
 - End responses confidently
+
+${voiceCard}
 
 === DIVYAM'S PROFILE ===
 
@@ -284,7 +392,10 @@ A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, a
         },
         contents: [{
           role: 'user',
-          parts: [{ text: question }]
+          parts: [
+            ...(resumeInlinePart ? [resumeInlinePart] : []),
+            { text: question }
+          ]
         }],
         generationConfig: {
           maxOutputTokens: 250,
