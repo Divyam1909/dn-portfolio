@@ -174,17 +174,7 @@ const Contact: React.FC = () => {
   const websiteRaw = typeof socialLinks.website === 'string' ? socialLinks.website.trim() : '';
   const isDeprecatedWebsite = /pages\.dev/i.test(websiteRaw);
   const portfolioUrlFull = !websiteRaw || isDeprecatedWebsite ? CANONICAL_WEBSITE_URL : websiteRaw;
-  const portfolioUrlHost = portfolioUrlFull.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const shortenMiddle = (text: string, maxLen: number) => {
-    if (!text) return '';
-    if (text.length <= maxLen) return text;
-    // Keep the end visible (e.g. "vercel.app") and trim from the middle for a natural "URL bar" feel.
-    const ellipsis = '…';
-    const tailLen = Math.min(10, Math.max(0, maxLen - 6)); // bias toward preserving the end
-    const headLen = Math.max(0, maxLen - tailLen - ellipsis.length);
-    return `${text.slice(0, headLen)}${ellipsis}${text.slice(-tailLen)}`;
-  };
-  const portfolioUrl = shortenMiddle(portfolioUrlHost, 24);
+  const portfolioUrl = portfolioUrlFull.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -735,8 +725,8 @@ const PhoneWrapper = styled.div`
     border-radius: 24px;
     margin: 0 auto;
     width: 100%;
-    max-width: 240px;
-    min-width: 200px;
+    max-width: 270px;
+    min-width: 210px;
   }
 
   .searchbar:hover {
@@ -747,7 +737,7 @@ const PhoneWrapper = styled.div`
   .searchbar-wrapper {
     flex: 1;
     display: flex;
-    padding: 5px 8px 0 14px;
+    padding: 5px 6px 0 10px;
     align-items: center;
     min-width: 0;
   }
@@ -758,7 +748,7 @@ const PhoneWrapper = styled.div`
     color: #202124;
     display: flex;
     align-items: center;
-    padding-right: 8px;
+    padding-right: 6px;
     margin-top: -5px;
     flex-shrink: 0;
   }
@@ -797,9 +787,9 @@ const PhoneWrapper = styled.div`
     flex: 100%;
     white-space: pre;
     height: 34px;
-    font-size: 11px;
+    font-size: 10px;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip;
   }
 
   .searchbar-input {
@@ -814,11 +804,12 @@ const PhoneWrapper = styled.div`
     flex: 100%;
     margin-top: -37px;
     height: 34px;
-    font-size: 11.5px;
+    font-size: 10.2px;
+    letter-spacing: -0.2px;
     max-width: 100%;
     width: 100%;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip;
   }
 
   .searchbar-right {

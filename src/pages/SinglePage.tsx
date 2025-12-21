@@ -39,6 +39,18 @@ const SinglePage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  // Prevent the browser from restoring scroll position on refresh/back-forward.
+  // We manage scroll explicitly based on the route.
+  useEffect(() => {
+    try {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    } catch {
+      // no-op (some browsers / iframes can throw)
+    }
+  }, []);
+
   const homeRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
   const resumeRef = useRef<HTMLDivElement>(null);
@@ -80,22 +92,26 @@ const SinglePage: React.FC = () => {
   );
 
   const scrollToSection = useCallback(
-    (section: SectionKey) => {
+    (section: SectionKey, behavior: ScrollBehavior = 'smooth') => {
       if (section === 'home') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior });
         return;
       }
 
       const target = sectionRefs[section]?.current;
       if (!target) return;
       target.scrollIntoView({
-        behavior: 'smooth',
+        behavior,
         block: 'start',
       });
     },
     [sectionRefs]
   );
 
+  // On initial mount / refresh, do a non-smooth jump to the section.
+  // This avoids scroll-spy + smooth-scroll timing issues that can land you
+  // near the wrong section after a reload.
+  const isFirstScrollRef = useRef(true);
   useEffect(() => {
     if (skipScrollRef.current) {
       skipScrollRef.current = false;
@@ -103,6 +119,8 @@ const SinglePage: React.FC = () => {
     }
 
     const section = pathToSection(location.pathname);
+    const behavior: ScrollBehavior = isFirstScrollRef.current ? 'auto' : 'smooth';
+    isFirstScrollRef.current = false;
 
     // Treat a route change as a "manual navigation" and temporarily lock the
     // scroll observer so it doesn't fight the smooth scroll animation.
@@ -144,7 +162,7 @@ const SinglePage: React.FC = () => {
     }, 50);
 
     const timer = window.setTimeout(() => {
-      scrollToSection(section);
+      scrollToSection(section, behavior);
     }, 50);
 
     return () => window.clearTimeout(timer);
