@@ -303,6 +303,20 @@ A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, a
         );
       };
 
+      const isInvalidKeyError = (msg, status) => {
+        const msgLower = String(msg || '').toLowerCase();
+        return (
+          msgLower.includes('api key not valid') ||
+          msgLower.includes('invalid api key') ||
+          msgLower.includes('invalid api-key') ||
+          msgLower.includes('api key invalid') ||
+          msgLower.includes('permission denied') ||
+          msgLower.includes('unauthorized') ||
+          status === 401 ||
+          status === 403
+        );
+      };
+
       const callGemini = async (model) => {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
@@ -336,6 +350,7 @@ A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, a
             status: response.status,
             error: msg,
             isQuota: isQuotaError(msg, response.status),
+            isInvalidKey: isInvalidKeyError(msg, response.status),
           };
         }
 
@@ -345,12 +360,35 @@ A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, a
       // Try models in order. If all fail, return a rate-limit style error (as requested).
       let data = null;
       let lastErr = null;
+      let lastErrStatus = null;
+      let lastWasInvalidKey = false;
       for (const model of MODEL_FALLBACKS) {
         const attempt = await callGemini(model);
         if (attempt.ok) {
           data = attempt.data;
           lastErr = null;
+          lastErrStatus = null;
+          lastWasInvalidKey = false;
           break;
+        }
+
+        if (attempt.isInvalidKey) {
+          // Misconfiguration: no point trying other models if the key itself is invalid.
+          return new Response(
+            JSON.stringify({
+              error:
+                'Chatbot is misconfigured (invalid GEMINI_API_KEY). Update the secret and redeploy.',
+              detail: String(attempt.error).slice(0, 500),
+              animation: 'No',
+            }),
+            {
+              status: 401,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders,
+              },
+            }
+          );
         }
 
         // If this is a quota/rate-limit error, stop immediately (fallbacks won't help).
@@ -373,18 +411,22 @@ A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, a
         }
 
         lastErr = `Model ${model} failed: ${String(attempt.error).slice(0, 500)}`;
+        lastErrStatus = attempt.status;
+        lastWasInvalidKey = Boolean(attempt.isInvalidKey);
       }
 
       if (!data) {
         return new Response(
           JSON.stringify({
-            error:
-              'Chatbot is temporarily unavailable (all Gemini model attempts failed). Please try again later.',
+            error: lastWasInvalidKey
+              ? 'Chatbot is misconfigured (invalid GEMINI_API_KEY). Update the secret and redeploy.'
+              : 'Chatbot is temporarily unavailable (all Gemini model attempts failed). Please try again later.',
             detail: lastErr || 'Unknown error',
             animation: 'No',
           }),
           {
-            status: 429,
+            // Not a rate-limit by default; treat as upstream failure/misconfig.
+            status: lastWasInvalidKey ? 401 : 502,
             headers: {
               'Content-Type': 'application/json',
               ...corsHeaders,

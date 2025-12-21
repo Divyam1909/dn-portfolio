@@ -112,11 +112,18 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
         /quota/i.test(errText) ||
         /rate limit/i.test(errText) ||
         /\b429\b/.test(errText);
+      const isMisconfig =
+        /invalid gemini_api_key/i.test(errText) ||
+        /api key not valid/i.test(errText) ||
+        /\b401\b/.test(errText) ||
+        /\b403\b/.test(errText);
 
       const errorMessage: Message = { 
-        text: isQuota
-          ? 'Pixel is temporarily busy (rate limit reached). Please try again in a bit. 🤖'
-          : 'Sorry, I\'m having trouble connecting right now. Please try again in a moment! 🤖',
+        text: isMisconfig
+          ? 'Chatbot is misconfigured (invalid API key). Please update the Gemini API key and redeploy the Worker. 🤖'
+          : isQuota
+            ? 'Pixel is temporarily busy (rate limit reached). Please try again in a bit. 🤖'
+            : 'Sorry, I\'m having trouble connecting right now. Please try again in a moment! 🤖',
         sender: 'bot' 
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
