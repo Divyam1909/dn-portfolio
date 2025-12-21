@@ -1,9 +1,9 @@
-# Deployment Guide - Cloudflare + Render
+# Deployment Guide - Vercel + Render (+ Cloudflare Workers)
 
 This guide covers deploying your portfolio website with:
-- **Frontend**: Cloudflare Pages (free, fast CDN)
+- **Frontend**: Vercel (easy Git deploy + global CDN)
 - **Backend API**: Render (free tier, no credit card)
-- **Chatbot**: Cloudflare Workers (free tier)
+- **Chatbot**: Cloudflare Workers (free tier) (optional)
 
 ---
 
@@ -11,7 +11,7 @@ This guide covers deploying your portfolio website with:
 
 | Service | URL | Status |
 |---------|-----|--------|
-| Frontend | https://divyam-portfolio.pages.dev | ✅ Live |
+| Frontend | https://divyam-n-portfolio.vercel.app | ✅ Live |
 | Backend API | https://dn-portfolio.onrender.com | ✅ Live |
 | Chatbot | https://pixel-chatbot.demoaccdn01.workers.dev | ✅ Live |
 
@@ -19,11 +19,14 @@ This guide covers deploying your portfolio website with:
 
 ## 🌐 Initial Deployment (Already Done)
 
-### Frontend → Cloudflare Pages
+### Frontend → Vercel
+Recommended: connect your GitHub repo to Vercel (Dashboard) so it auto-deploys on every `git push`.
+
 ```bash
 cd C:\Users\divya\Desktop\Portfolio
 npm run build
-npx wrangler pages deploy build --project-name=divyam-portfolio
+# Optional (CLI): deploy using Vercel CLI
+# npx vercel --prod
 ```
 
 ### Backend → Render
@@ -42,7 +45,7 @@ npm run deploy
 
 - [x] Render backend is running (`/api/portfolio` returns data)
 - [x] Cloudflare Worker chatbot responds to POST `/chat`
-- [x] Cloudflare Pages site loads
+- [x] Vercel site loads
 - [x] Chatbot works on the live site
 - [x] All pages load correctly (SPA routing works)
 
@@ -58,14 +61,15 @@ When you modify files in `src/` folder:
 # Step 1: Navigate to project root
 cd C:\Users\divya\Desktop\Portfolio
 
-# Step 2: Build the React app
+# Step 2: Build the React app (optional for local verification)
 npm run build
 
-# Step 3: Deploy to Cloudflare Pages
-npx wrangler pages deploy build --project-name=divyam-portfolio
+# Step 3: Deploy
+# - If using Git integration: commit + push and Vercel auto-deploys
+# - If using CLI: npx vercel --prod
 ```
 
-**That's it!** Your changes will be live at https://divyam-portfolio.pages.dev
+**That's it!** Your changes will be live at https://divyam-n-portfolio.vercel.app
 
 ---
 
@@ -121,7 +125,7 @@ npx wrangler secret put GEMINI_API_KEY
 
 | What Changed | Commands |
 |--------------|----------|
-| Frontend (`src/`) | `npm run build` → `npx wrangler pages deploy build --project-name=divyam-portfolio` |
+| Frontend (`src/`) | `git add .` → `git commit -m "msg"` → `git push` (Vercel auto-deploy) |
 | Backend (`backend/`) | `git add .` → `git commit -m "msg"` → `git push origin main` |
 | Chatbot (`cloudflare-chatbot/`) | `cd cloudflare-chatbot` → `npx wrangler deploy` |
 
@@ -131,7 +135,7 @@ npx wrangler secret put GEMINI_API_KEY
 
 | Service | Free Tier |
 |---------|-----------|
-| Cloudflare Pages | ✅ 500 builds/month, unlimited requests |
+| Vercel | ✅ generous hobby tier (static + serverless limits apply) |
 | Cloudflare Workers | ✅ 100,000 requests/day |
 | Render | ✅ 750 hours/month (spins down after 15min inactivity) |
 | MongoDB Atlas | ✅ 512MB free tier |
@@ -143,10 +147,7 @@ npx wrangler secret put GEMINI_API_KEY
 ## 🐛 Troubleshooting
 
 ### "Page not found" on refresh
-Make sure `_redirects` file exists in `public/` folder with:
-```
-/*    /index.html   200
-```
+For Vercel SPA routing, make sure `vercel.json` includes a catch-all route to `index.html` (this repo already has it).
 
 ### Chatbot not responding
 1. Check Worker logs: `npx wrangler tail`
@@ -173,18 +174,18 @@ Portfolio/
 │   ├── wrangler.toml
 │   └── package.json
 ├── public/
-│   ├── _redirects          # SPA routing for Cloudflare Pages
-│   └── _headers            # Cache headers
+│   ├── _redirects          # (legacy) Cloudflare Pages SPA routing
+│   └── _headers            # (legacy) Cloudflare Pages headers
 ├── src/                    # React app
 ├── .env.production         # Production environment variables
-└── build/                  # → Cloudflare Pages
+└── build/                  # local build output (gitignored)
 ```
 
 ---
 
 ## 🔗 Useful Links
 
-- **Live Site**: https://divyam-portfolio.pages.dev
+- **Live Site**: https://divyam-n-portfolio.vercel.app
 - **Backend API**: https://dn-portfolio.onrender.com
 - **Chatbot Worker**: https://pixel-chatbot.demoaccdn01.workers.dev
 - [MongoDB Atlas](https://cloud.mongodb.com/) (database management)

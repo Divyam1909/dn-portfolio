@@ -39,6 +39,9 @@ build/
 # React
 /build
 
+# Cloudflare Wrangler (local)
+.wrangler/
+
 # Production
 /public/uploads/*.pdf
 

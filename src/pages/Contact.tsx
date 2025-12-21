@@ -169,7 +169,7 @@ const Contact: React.FC = () => {
   };
 
   const popupData = getPopupContent();
-  const portfolioUrl = socialLinks.website || 'divyam-portfolio.pages.dev';
+  const portfolioUrl = socialLinks.website || 'divyam-n-portfolio.vercel.app';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
