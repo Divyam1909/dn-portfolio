@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, CircularProgress, Box } from '@mui/material';
+import { ThemeProvider, CssBaseline, CircularProgress, Box, Typography } from '@mui/material';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useThemeToggle } from './hooks/useThemeToggle';
 import { DataProvider, usePortfolioData } from './contexts/DataContext';
@@ -16,13 +16,26 @@ const UniverseView = lazy(() => import('./pages/UniverseView'));
 
 // Loading fallback
 const LoadingFallback = () => (
-  <Box sx={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh' 
-  }}>
-    <CircularProgress />
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 2,
+      height: '100vh',
+      color: 'rgba(255,255,255,0.9)',
+      background:
+        'radial-gradient(1200px 800px at 50% 30%, rgba(56,189,248,0.10) 0%, rgba(139,92,246,0.08) 35%, rgba(2,6,23,1) 75%)',
+    }}
+  >
+    <Typography sx={{ fontWeight: 700, letterSpacing: 0.5 }}>
+      Loading Universe…
+    </Typography>
+    <CircularProgress size={28} sx={{ color: 'rgba(255,255,255,0.85)' }} />
+    <Typography variant="body2" sx={{ opacity: 0.75, maxWidth: 520, textAlign: 'center', px: 3 }}>
+      First load can take a few seconds while 3D assets and textures download.
+    </Typography>
   </Box>
 );
 
