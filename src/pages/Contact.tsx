@@ -169,7 +169,11 @@ const Contact: React.FC = () => {
   };
 
   const popupData = getPopupContent();
-  const portfolioUrlFull = socialLinks.website || 'https://divyam-n-portfolio.vercel.app';
+  // Canonical website URL (used to prevent old deployments like *.pages.dev from showing up in the mock UI)
+  const CANONICAL_WEBSITE_URL = 'https://divyam-n-portfolio.vercel.app';
+  const websiteRaw = typeof socialLinks.website === 'string' ? socialLinks.website.trim() : '';
+  const isDeprecatedWebsite = /pages\.dev/i.test(websiteRaw);
+  const portfolioUrlFull = !websiteRaw || isDeprecatedWebsite ? CANONICAL_WEBSITE_URL : websiteRaw;
   const portfolioUrl = portfolioUrlFull.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);

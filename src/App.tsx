@@ -14,7 +14,10 @@ const BackgroundParticles = lazy(() => import('./components/BackgroundParticles'
 const SinglePage = lazy(() => import('./pages/SinglePage'));
 const UniverseView = lazy(() => import('./pages/UniverseView'));
 
-const VIEW_STORAGE_KEY = 'portfolio:lastView';
+// Persist only within the current tab/session:
+// - refresh should keep the current view
+// - closing the tab and reopening should start at Universe View again
+const VIEW_STORAGE_KEY = 'portfolio:lastView:session';
 const VIEW_UNIVERSE = 'universe';
 const VIEW_SIMPLIFIED = 'simplified';
 
@@ -67,7 +70,7 @@ const RoutingHandler: React.FC<{
     isFirstLoadRef.current = false;
 
     const hash = window.location.hash;
-    const lastView = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    const lastView = window.sessionStorage.getItem(VIEW_STORAGE_KEY);
     // If the user last chose Simplified view, do NOT force "/" -> "/universe" on refresh.
     if (location.pathname === '/' && !hash && lastView !== VIEW_SIMPLIFIED) {
       navigate('/universe', { replace: true, state: { from: '/' } });
@@ -118,7 +121,7 @@ const RoutingHandler: React.FC<{
     // Capture the current route at click time (more reliable than relying on
     // a ref that may be updated by scroll-spy during smooth scroll).
     const from = `${location.pathname}${location.search}` || lastSimplifiedPathRef.current || '/';
-    window.localStorage.setItem(VIEW_STORAGE_KEY, VIEW_UNIVERSE);
+    window.sessionStorage.setItem(VIEW_STORAGE_KEY, VIEW_UNIVERSE);
     navigate('/universe', { state: { from } });
   }, [location.pathname, location.search, navigate]);
 
@@ -126,7 +129,7 @@ const RoutingHandler: React.FC<{
     (routeOverride?: string) => {
       const from = (location.state as any)?.from as string | undefined;
       const destination = routeOverride ?? from ?? lastSimplifiedPathRef.current ?? '/';
-      window.localStorage.setItem(VIEW_STORAGE_KEY, VIEW_SIMPLIFIED);
+      window.sessionStorage.setItem(VIEW_STORAGE_KEY, VIEW_SIMPLIFIED);
       navigate(destination);
     },
     [location.state, navigate]
