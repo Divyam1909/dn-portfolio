@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Fade } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { portfolioAPI } from '../services/api';
+
+// Import quotes from local JSON
+import quotesData from '../data/quotes.json';
 
 interface UniverseQuoteProps {
   category?: string;
@@ -10,8 +12,8 @@ interface UniverseQuoteProps {
   cameraDistance?: number;
 }
 
-const UniverseQuote: React.FC<UniverseQuoteProps> = ({ 
-  category = 'universe', 
+const UniverseQuote: React.FC<UniverseQuoteProps> = ({
+  category = 'universe',
   variant = 'universe',
   cameraDistance = 45
 }) => {
@@ -39,14 +41,20 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
     }
   ];
 
-  const loadQuote = async () => {
+  const loadQuote = () => {
     setLoading(true);
     try {
-      const response = await portfolioAPI.getRandomQuote(category);
-      if (response.data.success && response.data.data) {
-        setQuote(response.data.data);
+      // Filter quotes by category if provided, otherwise use all quotes
+      const availableQuotes = category
+        ? quotesData.filter((q: any) => q.category === category && q.isActive)
+        : quotesData.filter((q: any) => q.isActive);
+
+      if (availableQuotes.length > 0) {
+        // Select a random quote from available quotes
+        const randomQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
+        setQuote(randomQuote);
       } else {
-        // Use fallback if no quote from DB
+        // Use fallback if no matching quotes found
         const randomFallback = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
         setQuote(randomFallback);
       }
@@ -77,13 +85,13 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
     // Show quote when distance > 30, hide when distance < 30
     const isVisible = cameraDistance > 30;
     const shouldScatter = cameraDistance <= 30;
-    
+
     // Split quote into individual characters for letter-by-letter particle effect
     const text = quote.text;
     const characters = text.split('');
-    
+
     return (
-      <Box sx={{ 
+      <Box sx={{
         position: 'absolute',
         top: '100px',
         left: '50%',
@@ -94,7 +102,7 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
         alignItems: 'flex-start',
         px: { xs: 2, sm: 4, md: 6 }
       }}>
-        <Box sx={{ 
+        <Box sx={{
           textAlign: 'center',
           maxWidth: '1100px',
           width: '100%',
@@ -104,10 +112,10 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
           justifyContent: 'center'
         }}>
           {/* Animated Quote Text with Letter-by-Letter Particle Effect */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            justifyContent: 'center', 
+          <Box sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             gap: '0.1rem',
             mb: 1.5,
             lineHeight: 1.8
@@ -117,37 +125,37 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
               if (char === ' ') {
                 return <span key={`${key}-${index}`} style={{ width: '0.3em', display: 'inline-block' }} />;
               }
-              
+
               // Subtle particle-like movement - much gentler
               const randomX = (Math.random() - 0.5) * 40; // Reduced from 300
               const randomY = (Math.random() - 0.5) * 30;  // Reduced from 200
               const randomRotate = (Math.random() - 0.5) * 20; // Reduced from 720
               const randomScale = Math.random() * 0.2 + 0.8; // Less dramatic scaling
-              
+
               return (
                 <motion.span
                   key={`${key}-${index}`}
                   initial={{ opacity: 0 }}
                   animate={
                     isVisible
-                      ? { 
-                          opacity: 1, 
-                          y: 0, 
-                          x: 0,
-                          scale: 1,
-                          rotate: 0
-                        }
-                      : { 
-                          opacity: 0, 
-                          y: randomY,
-                          x: randomX,
-                          scale: randomScale,
-                          rotate: randomRotate
-                        }
+                      ? {
+                        opacity: 1,
+                        y: 0,
+                        x: 0,
+                        scale: 1,
+                        rotate: 0
+                      }
+                      : {
+                        opacity: 0,
+                        y: randomY,
+                        x: randomX,
+                        scale: randomScale,
+                        rotate: randomRotate
+                      }
                   }
-                  transition={{ 
+                  transition={{
                     duration: 0.6, // Slower, more subtle
-                    delay: isVisible 
+                    delay: isVisible
                       ? index * 0.015 + Math.random() * 0.02 // Gentle staggered appearance
                       : index * 0.008, // Gentle staggered disappearance
                     ease: "easeInOut", // Smooth easing
@@ -172,7 +180,7 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
               );
             })}
           </Box>
-          
+
           {/* Author with Letter-by-Letter Particle Effect */}
           {quote.author && (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.1rem' }}>
@@ -180,37 +188,37 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
                 if (char === ' ') {
                   return <span key={`author-${key}-${index}`} style={{ width: '0.3em', display: 'inline-block' }} />;
                 }
-                
+
                 // Subtle particle-like movement - much gentler
                 const randomX = (Math.random() - 0.5) * 30;
                 const randomY = (Math.random() - 0.5) * 25;
                 const randomRotate = (Math.random() - 0.5) * 15;
                 const randomScale = Math.random() * 0.15 + 0.85;
-                
+
                 return (
                   <motion.span
                     key={`author-${key}-${index}`}
                     initial={{ opacity: 0 }}
                     animate={
                       isVisible
-                        ? { 
-                            opacity: 0.85, 
-                            y: 0, 
-                            x: 0,
-                            scale: 1,
-                            rotate: 0
-                          }
-                        : { 
-                            opacity: 0, 
-                            y: randomY,
-                            x: randomX,
-                            scale: randomScale,
-                            rotate: randomRotate
-                          }
+                        ? {
+                          opacity: 0.85,
+                          y: 0,
+                          x: 0,
+                          scale: 1,
+                          rotate: 0
+                        }
+                        : {
+                          opacity: 0,
+                          y: randomY,
+                          x: randomX,
+                          scale: randomScale,
+                          rotate: randomRotate
+                        }
                     }
-                    transition={{ 
+                    transition={{
                       duration: 0.5,
-                      delay: isVisible 
+                      delay: isVisible
                         ? index * 0.02 + Math.random() * 0.015
                         : index * 0.006,
                       ease: "easeInOut",
@@ -303,4 +311,3 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
 };
 
 export default UniverseQuote;
-

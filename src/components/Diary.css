@@ -1,0 +1,334 @@
+/* Ported from diary.html for React Diary Component */
+
+:root {
+    --book-width: 360px;
+    --book-height: 520px;
+    --anim-speed: 0.8s;
+    --cursor-pen: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 0 24, auto;
+}
+
+.diary-scene {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 2500px;
+    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: clip;
+    transform-origin: center center;
+    font-family: 'Cormorant Garamond', serif;
+    cursor: var(--cursor-pen);
+    /* Enforce custom cursor */
+}
+
+.diary-book {
+    cursor: var(--cursor-pen) !important;
+    overflow: hidden !important;
+    transform-style: preserve-3d;
+}
+
+/* Hide flipping pages on their backside */
+.stf__parent,
+.stf__wrapper {
+    overflow: hidden !important;
+}
+
+/* Completely hide the back of pages during flip */
+.stf__item {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+}
+
+/* Hard hide on page blocks */
+.stf__block {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    overflow: hidden !important;
+}
+
+/* Page Components */
+.diary-page {
+    background-color: #f3e5ce !important;
+    border: 1px solid #5d4037;
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: inset 8px 0 15px -8px rgba(0, 0, 0, 0.15);
+    position: relative;
+    /* Ensure relative positioning for absolute children */
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    transform-style: preserve-3d;
+    transform: translateZ(0);
+    /* Force hardware acceleration */
+    will-change: transform;
+}
+
+/* Ensure the back of the page is opaque */
+.page-backing {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    backface-visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateZ(0);
+}
+
+/* Ensure ABSOLUTELY NO child elements show through the back */
+.stf__item,
+.stf__block,
+.diary-page .content-layer,
+.diary-page .content-layer *,
+.diary-page img,
+.polaroid,
+.polaroid * {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+}
+
+/* Textures */
+.paper-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 5;
+}
+
+.leather-texture {
+    background: linear-gradient(135deg, #3e2723 0%, #251614 100%);
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Covers */
+.cover-front,
+.cover-back {
+    border: 3px solid #4a3b32;
+    box-shadow: inset 8px 0 15px rgba(0, 0, 0, 0.5), inset -2px 0 5px rgba(255, 255, 255, 0.1);
+    position: relative;
+    height: 100%;
+}
+
+.corner-gold {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.corner-gold svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.c-tl {
+    top: 0;
+    left: 0;
+    transform: rotate(0deg);
+}
+
+.c-tr {
+    top: 0;
+    right: 0;
+    transform: rotate(90deg);
+}
+
+.c-bl {
+    bottom: 0;
+    left: 0;
+    transform: rotate(-90deg);
+}
+
+.c-br {
+    bottom: 0;
+    right: 0;
+    transform: rotate(180deg);
+}
+
+/* Content Layer */
+.content-layer {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+
+.bordered-content {
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    border-radius: 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.inner-page-frame {
+    border: 1px solid #4a2f2a;
+    height: 100%;
+    width: 100%;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* subtle second stroke, like the “printed frame” in your reference */
+.inner-page-frame::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 3px solid rgb(101, 57, 41);
+    pointer-events: none;
+}
+
+/* Typography */
+.font-display {
+    font-family: 'Cinzel', serif;
+}
+
+.font-serif {
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.font-hand {
+    font-family: 'La Belle Aurore', cursive;
+}
+
+.font-sc {
+    font-family: 'IM Fell English SC', serif;
+}
+
+.text-ink {
+    color: #2b2118;
+}
+
+.text-gold {
+    color: #c5a059;
+}
+
+.text-leather {
+    color: #3e2723;
+}
+
+.text-light-gold {
+    color: #e0c080;
+}
+
+/* Elements */
+.polaroid {
+    background: white;
+    padding: 8px 8px 30px 8px;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+    position: relative;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.polaroid:hover {
+    transform: scale(1.02) rotate(0deg) !important;
+    box-shadow: 5px 12px 25px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+}
+
+.tape {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    width: 60px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(3px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tech-badge {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.75rem;
+    color: #5d4037;
+    border: 1px solid #c5a059;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(197, 160, 89, 0.15);
+    white-space: nowrap;
+    display: inline-block;
+    margin: 2px;
+}
+
+.index-item {
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    padding: 8px 0 8px 25px;
+    border-bottom: 1px dashed rgba(197, 160, 89, 0.3);
+}
+
+.index-item:hover {
+    color: #3e2723;
+    background: rgba(197, 160, 89, 0.1);
+}
+
+.index-item::before {
+    content: '❧';
+    position: absolute;
+    left: 5px;
+    color: #c5a059;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.index-item:hover::before {
+    opacity: 1;
+}
+
+.nav-hint {
+    font-family: 'IM Fell English SC', serif;
+    color: #8d7b68;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    text-align: center;
+    width: 100%;
+}
+
+/* Page number styling (moved from inline styles in ProjectDiary.tsx) */
+.page-number {
+    text-align: center;
+    font-family: "La Belle Aurore", cursive;
+    font-size: 0.8rem;
+    opacity: 1;
+    color: #2b2118;
+    /* ink */
+}
+
+.page-number--below {
+    margin-top: 1rem;
+}
+
+.page-number--bottom {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 0;
+    width: 100%;
+}
+
+/* Utilities */
+.rotate-1 {
+    transform: rotate(1deg);
+}
+
+.rotate-n1 {
+    transform: rotate(-1deg);
+}
+
+.sepia-low {
+    filter: sepia(0.3);
+}

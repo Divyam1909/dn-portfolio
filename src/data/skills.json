@@ -1,0 +1,105 @@
+{
+    "technical": [
+        {
+            "name": "JavaScript",
+            "level": 85,
+            "proficiency": "Intermediate",
+            "order": 3
+        },
+        {
+            "name": "C",
+            "level": 80,
+            "proficiency": "Intermediate",
+            "order": 4
+        },
+        {
+            "name": "Java",
+            "level": 80,
+            "proficiency": "Intermediate",
+            "order": 5
+        },
+        {
+            "name": "Web Development",
+            "level": 88,
+            "proficiency": "",
+            "order": 6
+        },
+        {
+            "name": "SEO",
+            "level": 82,
+            "proficiency": "",
+            "order": 7
+        },
+        {
+            "name": "Digital Marketing",
+            "level": 80,
+            "proficiency": "",
+            "order": 8
+        },
+        {
+            "name": "Content Writing",
+            "level": 85,
+            "proficiency": "",
+            "order": 9
+        },
+        {
+            "name": "Embedded Systems",
+            "level": 75,
+            "proficiency": "",
+            "order": 10
+        },
+        {
+            "name": "AI/ML Concepts",
+            "level": 78,
+            "proficiency": "",
+            "order": 11
+        },
+        {
+            "name": "Industrial Automation",
+            "level": 70,
+            "proficiency": "",
+            "order": 12
+        }
+    ],
+    "soft": [
+        {
+            "name": "Problem Solving",
+            "level": 90,
+            "order": 1
+        },
+        {
+            "name": "Communication",
+            "level": 95,
+            "order": 2
+        },
+        {
+            "name": "Team Collaboration",
+            "level": 90,
+            "order": 3
+        },
+        {
+            "name": "Time Management",
+            "level": 92,
+            "order": 4
+        },
+        {
+            "name": "Leadership",
+            "level": 85,
+            "order": 5
+        }
+    ],
+    "languages": [
+        {
+            "name": "English",
+            "level": 95,
+            "proficiency": "Fluent",
+            "order": 1
+        },
+        {
+            "name": "Hindi",
+            "level": 100,
+            "proficiency": "Native",
+            "order": 2
+        }
+    ]
+}

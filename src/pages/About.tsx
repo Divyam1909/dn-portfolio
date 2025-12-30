@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import aboutData from '../data/about.json';
 
 const monitorStyles = `
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
@@ -649,28 +650,23 @@ const monitorStyles = `
 .monitor-mock .instruction-line { margin-top: 6px; border-top: 1px dashed #2a2a2a; padding-top: 6px; color: #e4fdff; font-size: 1em; letter-spacing: 1.1px; line-height: 1.3; text-align: left; }
 `;
 
+// Generate monitor content from JSON data
 const monitorContent: Record<string, string> = {
-  intro: `<div class="title-centered">About Me !!</div>
-<div class="instruction-line">Type a command (W / P / X / H) to explore.</div>
+  intro: `<div class="title-centered">${aboutData.intro.title}</div>
+<div class="instruction-line">${aboutData.intro.instruction}</div>
 >_ `,
-  w: `<br><span class="header-section">WHO AM I?</span>
-I am a <span class="highlight-text">Full Stack Developer</span> & UI Designer.
-I specialize in building immersive web experiences that feel alive.
+  w: `<br><span class="header-section">${aboutData.who.header}</span>
+${aboutData.who.content.join('\n')}
 <br>>_ `,
-  p: `<br><span class="header-section">MY PURPOSE</span>
-To humanize technology. I build tools that are intuitive, robust, and delightful.
-My goal is to simplify the complex and make the web a more beautiful place.
+  p: `<br><span class="header-section">${aboutData.purpose.header}</span>
+${aboutData.purpose.content.join('\n')}
 <br>>_ `,
-  x: `<br><span class="header-section">CREATIVE PHILOSOPHY</span>
-"Form follows function, but form implies values."
-1. <span class="accent-text">Simplicity</span> is the ultimate sophistication.
-2. <span class="accent-text">Performance</span> is a feature, not an afterthought.
-3. <span class="accent-text">Accessibility</span> ensures everyone is invited.
+  x: `<br><span class="header-section">${aboutData.creative.header}</span>
+"${aboutData.creative.quote}"
+${aboutData.creative.principles.map((p, i) => `${i + 1}. <span class="accent-text">${p.key}</span> ${p.value}`).join('\n')}
 <br>>_ `,
-  h: `<br><span class="header-section">PASSIONS</span>
-> <span class="highlight-text">Coding</span> (React, WebGL, Node.js)
-> <span class="highlight-text">Gaming</span> (RPG, Strategy)
-> <span class="highlight-text">Coffee</span> (Dark Roast)
+  h: `<br><span class="header-section">${aboutData.passions.header}</span>
+${aboutData.passions.items.map(item => `> <span class="highlight-text">${item.name}</span> (${item.details})`).join('\n')}
 <br>>_ `,
 };
 
@@ -968,7 +964,7 @@ const MonitorMock: React.FC = () => {
     // MODIFIED WHEEL HANDLER: Only captures scroll if hovering over display
     const wheelHandler = (e: WheelEvent) => {
       if (!isActive || !isPowerOn) return;
-      
+
       // Check if mouse event target is inside the display element
       if (display && display.contains(e.target as Node)) {
         e.preventDefault(); // Only prevent default page scroll if inside monitor

@@ -2,8 +2,15 @@ import React, { createContext, useContext, ReactNode, useState, useEffect, useMe
 import portfolioData from '../data/portfolioData';
 import { database } from '../services/database';
 import { GuideSettings, defaultGuideSettings } from '../utils/storage';
-import { portfolioAPI } from '../services/api';
-import { fallbackResumeData } from '../data/fallbackResumeData';
+
+// Import JSON data files
+import personalInfoData from '../data/personalInfo.json';
+import experienceData from '../data/experience.json';
+import educationData from '../data/education.json';
+import skillsData from '../data/skills.json';
+import projectsData from '../data/projects.json';
+import certificationsData from '../data/certifications.json';
+import quotesData from '../data/quotes.json';
 
 // Define context shape with precise typing
 interface DataContextType {
@@ -21,12 +28,12 @@ interface DataContextType {
 const DataContext = createContext<DataContextType>({
   data: portfolioData,
   guideSettings: defaultGuideSettings,
-  updateGuideSettings: () => {},
+  updateGuideSettings: () => { },
   isDarkMode: false,
-  toggleDarkMode: () => {},
+  toggleDarkMode: () => { },
   loading: false,
   error: null,
-  refreshData: async () => {},
+  refreshData: async () => { },
 });
 
 interface DataProviderProps {
@@ -34,103 +41,76 @@ interface DataProviderProps {
 }
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  // Initialize with data from portfolioData.ts as fallback
-  const [data, setData] = useState(portfolioData);
+  // Initialize with data from JSON files merged with portfolioData.ts defaults
+  const [data, setData] = useState(() => ({
+    ...portfolioData,
+    personalInfo: personalInfoData,
+    workExperience: experienceData,
+    education: educationData,
+    skills: skillsData,
+    projects: projectsData,
+    certifications: certificationsData,
+    quotes: quotesData,
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Initialize with defaults that will be replaced with stored values
-  const [guideSettings, setGuideSettings] = useState<GuideSettings>({ 
+  const [guideSettings, setGuideSettings] = useState<GuideSettings>({
     ...defaultGuideSettings,
     selectedCharacter: (
-      portfolioData.characterSettings.defaultCharacter === 'robot' 
-        ? 'dog' 
+      portfolioData.characterSettings.defaultCharacter === 'robot'
+        ? 'dog'
         : portfolioData.characterSettings.defaultCharacter
     ) as 'dog' | 'cat' | 'rabbit' | 'hamster' | 'fox',
   });
-  
+
   // Theme state
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
-  // Fetch portfolio data from backend
-  const fetchPortfolioData = async () => {
+
+  // Refresh data function (now just re-reads from static JSON)
+  const refreshData = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await portfolioAPI.getAll();
-      if (response.data.success && response.data.data) {
-        // Merge API data with local portfolioData structure
-        setData({
-          ...portfolioData,
-          ...response.data.data,
-        });
-      } else {
-        // Use fallback data if API returns empty data or no success
-        setData({
-          ...portfolioData,
-          ...fallbackResumeData,
-        });
-        if (process.env.NODE_ENV === 'development') {
-          console.info('API returned empty data, using fallback portfolio data');
-        }
-      }
-    } catch (err: any) {
-      // Only log errors if backend is actually running but returned an error
-      // Connection refused means backend isn't running - this is expected in some scenarios
-      const isConnectionRefused = err.code === 'ERR_NETWORK' || 
-                                  err.message?.includes('ERR_CONNECTION_REFUSED') ||
-                                  err.message?.includes('Network Error');
-      
-      if (!isConnectionRefused) {
-        // Only log unexpected errors (not connection refused)
-        console.error('Error fetching portfolio data:', err);
-        setError(err.message || 'Failed to load portfolio data');
-      } else {
-        // Silently use fallback data when backend is not available
-        // This is expected behavior when backend server is not running
-        if (process.env.NODE_ENV === 'development') {
-          console.info('Backend server not available, using local portfolio data');
-        }
-      }
-      // Use fallback data
+      // Data is now static from JSON files, just trigger a re-render
       setData({
         ...portfolioData,
-        ...fallbackResumeData,
+        personalInfo: personalInfoData,
+        workExperience: experienceData,
+        education: educationData,
+        skills: skillsData,
+        projects: projectsData,
+        certifications: certificationsData,
+        quotes: quotesData,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Refresh data function
-  const refreshData = async () => {
-    await fetchPortfolioData();
-  };
-
-  // Load portfolio data and settings on mount
+  // Load settings on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load both settings and portfolio data in parallel
+        // Load user settings from local storage
         const [savedGuideSettings, userPrefs] = await Promise.all([
           database.getGuideSettings(),
           database.getUserPreferences(),
-          fetchPortfolioData(), // Fetch from backend
         ]);
-        
+
         if (savedGuideSettings) {
           setGuideSettings(savedGuideSettings);
         }
-        
+
         setIsDarkMode(userPrefs.themeMode === 'dark');
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading settings:', error);
       }
     };
-    
+
     loadData();
   }, []);
-  
+
   // Update guide settings and save to database
   const updateGuideSettings = (settings: Partial<GuideSettings>) => {
     const newSettings = { ...guideSettings, ...settings };
@@ -141,7 +121,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         .catch(error => console.error('Failed to save guide settings:', error));
     }
   };
-  
+
   // Toggle dark mode and save preference
   const toggleDarkMode = () => {
     setIsDarkMode(prevMode => {
@@ -153,7 +133,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       return newMode;
     });
   };
-  
+
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     data,
@@ -164,9 +144,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     loading,
     error,
     refreshData
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [data, guideSettings, isDarkMode, loading, error]);
-  
+
   return (
     <DataContext.Provider value={contextValue}>
       {children}
@@ -177,4 +157,4 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 // Custom hook for using the context
 export const usePortfolioData = () => useContext(DataContext);
 
-export default DataContext; 
+export default DataContext;

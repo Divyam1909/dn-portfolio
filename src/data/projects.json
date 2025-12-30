@@ -1,0 +1,117 @@
+[
+    {
+        "title": "EduSage",
+        "description": "A full-stack smart education management system designed to streamline academic workflows using AI-driven features. Includes student management, analytics, and intelligent automation tools.",
+        "technologies": [
+            "MongoDB",
+            "Express.js",
+            "React",
+            "Node.js",
+            "Python"
+        ],
+        "image": "",
+        "demoLink": "https://edu-sage.vercel.app",
+        "sourceLink": "",
+        "featured": true,
+        "order": 1,
+        "status": "active",
+        "quote": "Making education smarter, one algorithm at a time."
+    },
+    {
+        "title": "MoneyOS",
+        "description": "An AI-driven personal finance operating system that analyzes spending behavior, enforces adaptive budgets, predicts affordability, and provides real-time financial intelligence using Google Gemini AI.",
+        "technologies": [
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Node.js",
+            "Express.js",
+            "MongoDB",
+            "Google Gemini API",
+            "JWT"
+        ],
+        "image": "",
+        "demoLink": "https://money-os.vercel.app",
+        "sourceLink": "",
+        "featured": true,
+        "order": 2,
+        "status": "active",
+        "quote": "Your wallet's new best friend with a brain."
+    },
+    {
+        "title": "Writeful Thinking",
+        "description": "An advanced AI text humanization tool that converts robotic, AI-generated content into natural, engaging, and undetectable human-like writing using Google Gemini. Supports tone control, real-time streaming, and AI detection analysis.",
+        "technologies": [
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Google Gemini API",
+            "Lucide React",
+            "jsPDF"
+        ],
+        "image": "",
+        "demoLink": "https://writeful-thinking.vercel.app",
+        "sourceLink": "",
+        "featured": true,
+        "order": 3,
+        "status": "active",
+        "quote": "Turning robot speak into human art."
+    },
+    {
+        "title": "ThinkLikeYou",
+        "description": "A privacy-first AI decision-making and digital twin system that models a user's linguistic fingerprints, behavioral traits, and decision heuristics to generate highly personalized, transparent, and evolving AI responses.",
+        "technologies": [
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Google Gemini API",
+            "Web Crypto API",
+            "AES-GCM Encryption",
+            "PBKDF2"
+        ],
+        "image": "",
+        "demoLink": "https://think-like-you.vercel.app",
+        "sourceLink": "",
+        "featured": true,
+        "order": 4,
+        "status": "active",
+        "quote": "Your mind, digitized and encrypted."
+    },
+    {
+        "title": "Otaku Log",
+        "description": "A universal tracking platform to log, organize, and monitor progress across manga, anime, manhwa, books, and other media in a single, centralized system.",
+        "technologies": [
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Node.js",
+            "Express.js",
+            "MongoDB"
+        ],
+        "image": "",
+        "demoLink": "https://otaku-log.vercel.app",
+        "sourceLink": "",
+        "featured": false,
+        "order": 5,
+        "status": "active",
+        "quote": "One log to track them all."
+    },
+    {
+        "title": "Wave Habitat",
+        "description": "A hardware-software integrated system developed during internship at Arms Robotics, enabling real-time interaction with company hardware and automation modules.",
+        "technologies": [
+            "HTML",
+            "CSS",
+            "PHP",
+            "Java",
+            "Python"
+        ],
+        "image": "",
+        "demoLink": "https://armsrobotics.com",
+        "sourceLink": "",
+        "featured": true,
+        "order": 6,
+        "status": "active",
+        "quote": "Where hardware meets software seamlessly."
+    }
+]

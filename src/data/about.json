@@ -1,0 +1,55 @@
+{
+    "intro": {
+        "title": "About Me !!",
+        "instruction": "Type a command (W / P / X / H) to explore."
+    },
+    "who": {
+        "header": "WHO AM I?",
+        "content": [
+            "I am a <span class=\"highlight-text\">Full Stack Developer</span> & UI Designer.",
+            "I specialize in building immersive web experiences that feel alive."
+        ]
+    },
+    "purpose": {
+        "header": "MY PURPOSE",
+        "content": [
+            "To humanize technology. I build tools that are intuitive, robust, and delightful.",
+            "My goal is to simplify the complex and make the web a more beautiful place."
+        ]
+    },
+    "creative": {
+        "header": "CREATIVE PHILOSOPHY",
+        "quote": "Form follows function, but form implies values.",
+        "principles": [
+            {
+                "key": "Simplicity",
+                "value": "is the ultimate sophistication."
+            },
+            {
+                "key": "Performance",
+                "value": "is a feature, not an afterthought."
+            },
+            {
+                "key": "Accessibility",
+                "value": "ensures everyone is invited."
+            }
+        ]
+    },
+    "passions": {
+        "header": "PASSIONS",
+        "items": [
+            {
+                "name": "Coding",
+                "details": "React, WebGL, Node.js"
+            },
+            {
+                "name": "Gaming",
+                "details": "RPG, Strategy"
+            },
+            {
+                "name": "Coffee",
+                "details": "Dark Roast"
+            }
+        ]
+    }
+}

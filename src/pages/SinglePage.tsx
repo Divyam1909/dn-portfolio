@@ -425,7 +425,9 @@ const SinglePage: React.FC = () => {
                 pb:
                   key === 'home' || key === 'contact'
                     ? 0
-                    : ({ xs: 4, md: 7 } as const),
+                    : key === 'projects'
+                      ? { xs: 0, md: 0 }
+                      : ({ xs: 4, md: 7 } as const),
                 zIndex: 1,
               }}
             >
@@ -444,7 +446,7 @@ const SinglePage: React.FC = () => {
                     display: 'inline-block',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    mb: { xs: 2.5, md: 3.5 },
+                    mb: key === 'projects' ? { xs: 0.5, md: 1 } : { xs: 2.5, md: 3.5 },
                   }}
                 >
                   <Typography
@@ -482,7 +484,7 @@ const SinglePage: React.FC = () => {
                 {/* Content Container */}
                 <Box
                   sx={{
-                    mt: { xs: 1, md: 2 },
+                    mt: key === 'projects' ? { xs: 0, md: 0 } : { xs: 1, md: 2 },
                     position: 'relative',
                   }}
                 >
@@ -497,7 +499,7 @@ const SinglePage: React.FC = () => {
                 sx={{
                   width: '100%',
                   px: { xs: 0, md: 0 },
-                  py: { xs: 2, md: 3 },
+                  py: { xs: 0, md: 1 },
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',

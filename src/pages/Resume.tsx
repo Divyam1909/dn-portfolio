@@ -33,7 +33,6 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePortfolioData } from '../contexts/DataContext';
-import { portfolioAPI } from '../services/api';
 import { dateForSorting } from "../utils/date";
 
 // --- Types ---
@@ -121,7 +120,7 @@ const TimelineDot: React.FC<{ color?: string }> = ({ color }) => {
 const ExperienceAccordion: React.FC<{ items: TimelineItemData[] }> = ({ items }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  
+
   // State for "One open at a time"
   const [expanded, setExpanded] = useState<string | false>(false);
   // State for "View More"
@@ -149,11 +148,11 @@ const ExperienceAccordion: React.FC<{ items: TimelineItemData[] }> = ({ items })
         const isPanelExpanded = expanded === panelId;
 
         return (
-          <Box 
-            key={item.id} 
-            sx={{ 
-              position: 'relative', 
-              mb: 3, 
+          <Box
+            key={item.id}
+            sx={{
+              position: 'relative',
+              mb: 3,
               pl: { xs: 3, md: 5 },
               // HOVER EFFECT: Triggers changes in the child .timeline-dot
               '&:hover .timeline-dot': {
@@ -167,7 +166,7 @@ const ExperienceAccordion: React.FC<{ items: TimelineItemData[] }> = ({ items })
             }}
           >
             <TimelineDot />
-            
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -224,26 +223,26 @@ const ExperienceAccordion: React.FC<{ items: TimelineItemData[] }> = ({ items })
                   </Box>
 
                   <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: { sm: '120px' } }}>
-                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1, mb: 0.5 }}>
-                        <CalendarIcon sx={{ fontSize: 14, opacity: 0.7 }} />
-                        <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-                          {item.date}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1, mb: 0.5 }}>
+                      <CalendarIcon sx={{ fontSize: 14, opacity: 0.7 }} />
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+                        {item.date}
+                      </Typography>
+                    </Box>
+                    {item.location && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1 }}>
+                        <LocationIcon sx={{ fontSize: 14, opacity: 0.5 }} />
+                        <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                          {item.location}
                         </Typography>
-                     </Box>
-                     {item.location && (
-                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, gap: 1 }}>
-                          <LocationIcon sx={{ fontSize: 14, opacity: 0.5 }} />
-                          <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                            {item.location}
-                          </Typography>
-                       </Box>
-                     )}
+                      </Box>
+                    )}
                   </Box>
                 </AccordionSummary>
-                
+
                 <AccordionDetails sx={{ px: 3, pb: 3, pt: 0 }}>
                   <Box sx={{ height: '1px', width: '100%', bgcolor: alpha(theme.palette.divider, 0.1), mb: 2 }} />
-                  
+
                   <Typography variant="body2" sx={{ lineHeight: 1.8, color: theme.palette.text.secondary, mb: 2 }}>
                     {item.description}
                   </Typography>
@@ -303,18 +302,18 @@ const ModernTimelineCard: React.FC<{ item: TimelineItemData; index: number }> = 
   const isDark = theme.palette.mode === 'dark';
 
   return (
-    <Box 
-      sx={{ 
-        position: 'relative', 
-        mb: 3, 
+    <Box
+      sx={{
+        position: 'relative',
+        mb: 3,
         pl: { xs: 3, md: 5 },
         '&:hover .timeline-dot': {
-            borderColor: theme.palette.secondary.main,
-            boxShadow: `0 0 0 4px ${alpha(theme.palette.secondary.main, 0.2)}`,
-            transform: 'scale(1.1)',
+          borderColor: theme.palette.secondary.main,
+          boxShadow: `0 0 0 4px ${alpha(theme.palette.secondary.main, 0.2)}`,
+          transform: 'scale(1.1)',
         },
         '&:hover .timeline-dot::after': {
-            transform: 'translate(-50%, -50%) scale(1)',
+          transform: 'translate(-50%, -50%) scale(1)',
         }
       }}
     >
@@ -364,14 +363,14 @@ const ModernTimelineCard: React.FC<{ item: TimelineItemData; index: number }> = 
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'flex-start', md: 'flex-end' }, gap: 0.5 }}>
-               <Typography variant="caption" sx={{ fontSize: '0.85rem', fontWeight: 500, color: theme.palette.text.secondary }}>
-                 {item.date}
-               </Typography>
-               {item.location && (
-                  <Typography variant="caption" sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
-                    {item.location}
-                  </Typography>
-               )}
+              <Typography variant="caption" sx={{ fontSize: '0.85rem', fontWeight: 500, color: theme.palette.text.secondary }}>
+                {item.date}
+              </Typography>
+              {item.location && (
+                <Typography variant="caption" sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
+                  {item.location}
+                </Typography>
+              )}
             </Box>
           </Box>
 
@@ -428,9 +427,9 @@ const ModernSkillBar: React.FC<{ name: string; level: number; delay: number }> =
         <Typography variant="body2" sx={{ fontWeight: 600 }}>{name}</Typography>
         <Typography variant="body2" color="primary">{level}%</Typography>
       </Box>
-      <Box sx={{ 
-        height: 8, 
-        width: '100%', 
+      <Box sx={{
+        height: 8,
+        width: '100%',
         bgcolor: isDark ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.05),
         borderRadius: 4,
         overflow: 'hidden'
@@ -458,11 +457,10 @@ const Resume: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const { data, loading } = usePortfolioData();
-  const { workExperience, education, skills } = data;
-  
-  const [certifications, setCertifications] = useState<any[]>([]);
+  const { workExperience, education, skills, certifications } = data;
+
   const [orderDesc, setOrderDesc] = useState(true);
 
   const tabKeys = useMemo(() => ['experience', 'education', 'skills', 'certifications'] as const, []);
@@ -490,19 +488,7 @@ const Resume: React.FC = () => {
     setTabValue(getInitialTab());
   }, [location.search, location.hash]);
 
-  useEffect(() => {
-    const loadCertifications = async () => {
-      try {
-        const response = await portfolioAPI.getCertifications();
-        if (response.data.success) {
-          setCertifications(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error loading certifications:', error);
-      }
-    };
-    loadCertifications();
-  }, []);
+  // Certifications now loaded from DataContext (local JSON)
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -523,7 +509,7 @@ const Resume: React.FC = () => {
 
   const transformData = (items: any[], type: 'work' | 'education' | 'certification'): TimelineItemData[] => {
     if (!items) return [];
-    
+
     const sorted = [...items].sort((a, b) => {
       const dateA = dateForSorting(a)?.valueOf() || 0;
       const dateB = dateForSorting(b)?.valueOf() || 0;
@@ -531,26 +517,26 @@ const Resume: React.FC = () => {
     });
 
     return sorted.map((item, index) => {
-        let tags: string[] = [];
-        if (type === 'work') tags = item.highlights || item.achievements || [];
-        if (type === 'education') tags = item.achievements || [];
-        if (type === 'certification') tags = item.skills || [];
+      let tags: string[] = [];
+      if (type === 'work') tags = item.highlights || item.achievements || [];
+      if (type === 'education') tags = item.achievements || [];
+      if (type === 'certification') tags = item.skills || [];
 
-        let dateStr = "";
-        if (item.startDate && item.endDate) dateStr = `${item.startDate} - ${item.endDate}`;
-        else if (item.issueDate) dateStr = item.issueDate;
-        else dateStr = item.date || "";
+      let dateStr = "";
+      if (item.startDate && item.endDate) dateStr = `${item.startDate} - ${item.endDate}`;
+      else if (item.issueDate) dateStr = item.issueDate;
+      else dateStr = item.date || "";
 
-        return {
-            id: item._id || index,
-            title: item.title || item.degree || "",
-            subtitle: item.company || item.institution || item.issuer || "",
-            date: dateStr,
-            location: item.location || (item.credentialId ? `ID: ${item.credentialId}` : ""),
-            description: item.description || "",
-            tags: Array.isArray(tags) ? tags : [],
-            isCurrent: item.current || false
-        };
+      return {
+        id: item._id || index,
+        title: item.title || item.degree || "",
+        subtitle: item.company || item.institution || item.issuer || "",
+        date: dateStr,
+        location: item.location || (item.credentialId ? `ID: ${item.credentialId}` : ""),
+        description: item.description || "",
+        tags: Array.isArray(tags) ? tags : [],
+        isCurrent: item.current || false
+      };
     });
   };
 
@@ -559,12 +545,12 @@ const Resume: React.FC = () => {
   const timelineCertifications = useMemo(() => transformData(certifications || [], 'certification'), [certifications, orderDesc]);
 
   const technicalSkills = Array.isArray(skills?.technical) ? skills.technical : [];
-  const softSkills = Array.isArray(skills?.soft) ? skills.soft.map((s: string) => ({ name: s, level: 85 })) : [];
+  const softSkills = Array.isArray(skills?.soft) ? skills.soft : [];
 
   const tabProps = {
-    sx: { 
-      textTransform: 'none', 
-      fontWeight: 600, 
+    sx: {
+      textTransform: 'none',
+      fontWeight: 600,
       fontSize: '1rem',
       minHeight: 48,
     }
@@ -572,9 +558,9 @@ const Resume: React.FC = () => {
 
   if (loading && timelineExperience.length === 0) {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-            <CircularProgress />
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -595,23 +581,23 @@ const Resume: React.FC = () => {
             }
           }}
         >
-          <Tab icon={<WorkIcon fontSize="small"/>} iconPosition="start" label="Experience" {...tabProps} />
-          <Tab icon={<SchoolIcon fontSize="small"/>} iconPosition="start" label="Education" {...tabProps} />
-          <Tab icon={<CodeIcon fontSize="small"/>} iconPosition="start" label="Skills" {...tabProps} />
-          <Tab icon={<AchievementsIcon fontSize="small"/>} iconPosition="start" label="Certifications" {...tabProps} />
+          <Tab icon={<WorkIcon fontSize="small" />} iconPosition="start" label="Experience" {...tabProps} />
+          <Tab icon={<SchoolIcon fontSize="small" />} iconPosition="start" label="Education" {...tabProps} />
+          <Tab icon={<CodeIcon fontSize="small" />} iconPosition="start" label="Skills" {...tabProps} />
+          <Tab icon={<AchievementsIcon fontSize="small" />} iconPosition="start" label="Certifications" {...tabProps} />
         </Tabs>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-           <Button
-             startIcon={<DownloadIcon />}
-             variant="contained"
-             color="primary"
-             href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
-             download
-             sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
-           >
-             Download CV
-           </Button>
+          <Button
+            startIcon={<DownloadIcon />}
+            variant="contained"
+            color="primary"
+            href={`${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`}
+            download
+            sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
+          >
+            Download CV
+          </Button>
         </Box>
       </Box>
 
@@ -623,8 +609,8 @@ const Resume: React.FC = () => {
             startIcon={<SortIcon />}
             variant="outlined"
             onClick={() => setOrderDesc(!orderDesc)}
-            sx={{ 
-              textTransform: 'none', 
+            sx={{
+              textTransform: 'none',
               borderRadius: 4,
               borderColor: alpha(theme.palette.text.secondary, 0.3),
               color: theme.palette.text.secondary,
@@ -661,28 +647,28 @@ const Resume: React.FC = () => {
 
           {/* TAB 2: SKILLS */}
           <TabPanel value={tabValue} index={2}>
-             <Grid container spacing={4}>
-               <Grid item xs={12} md={6}>
-                 <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
-                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CodeIcon color="primary" /> Technical Proficiency
-                    </Typography>
-                    {technicalSkills.map((skill: any, i: number) => (
-                      <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
-                    ))}
-                 </Paper>
-               </Grid>
-               <Grid item xs={12} md={6}>
-                 <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
-                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AchievementsIcon color="secondary" /> Soft Skills
-                    </Typography>
-                    {softSkills.map((skill: any, i: number) => (
-                      <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
-                    ))}
-                 </Paper>
-               </Grid>
-             </Grid>
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CodeIcon color="primary" /> Technical Proficiency
+                  </Typography>
+                  {technicalSkills.map((skill: any, i: number) => (
+                    <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
+                  ))}
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 4, borderRadius: 4, height: '100%', bgcolor: isDark ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.paper, 0.8) }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AchievementsIcon color="secondary" /> Soft Skills
+                  </Typography>
+                  {softSkills.map((skill: any, i: number) => (
+                    <ModernSkillBar key={i} name={skill.name} level={skill.level} delay={i * 0.1} />
+                  ))}
+                </Paper>
+              </Grid>
+            </Grid>
           </TabPanel>
 
           {/* TAB 3: CERTIFICATIONS */}

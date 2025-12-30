@@ -33,23 +33,31 @@ export const socialLinks = {
 };
 
 // ======= EDUCATION =======
-// Education entries are loaded from MongoDB
+// Education entries are loaded from JSON
 export const education: any[] = [];
 
 // ======= WORK EXPERIENCE =======
-// Work experience entries are loaded from MongoDB
+// Work experience entries are loaded from JSON
 export const workExperience: any[] = [];
 
 // ======= SKILLS =======
-// Skills are loaded from MongoDB
+// Skills are loaded from JSON
 export const skills = {
   technical: [] as any[],
-  soft: [] as string[],
+  soft: [] as any[],
   languages: [] as any[],
 };
 
+// ======= CERTIFICATIONS =======
+// Certifications are loaded from JSON
+export const certifications: any[] = [];
+
+// ======= QUOTES =======
+// Quotes are loaded from JSON
+export const quotes: any[] = [];
+
 // ======= PROJECTS =======
-// Projects are loaded from MongoDB
+// Projects are loaded from JSON
 export const projects: any[] = [];
 
 // ======= GUIDE MESSAGES =======
@@ -186,7 +194,7 @@ export const interactiveFeatures = {
       }
     ]
   },
-  
+
   // 3D characters settings
   characters: {
     enableHoverEffects: true,
@@ -204,14 +212,14 @@ export const interactiveFeatures = {
       }
     ]
   },
-  
+
   // Page transitions
   pageTransitions: {
     enableTransitions: true,
     transitionType: 'fade', // fade, slide, zoom
     transitionDuration: 0.3, // seconds
   },
-  
+
   // Easter eggs
   easterEggs: {
     enableEasterEggs: true,
@@ -227,7 +235,7 @@ export const interactiveFeatures = {
       }
     ]
   },
-  
+
   // Celebration effects
   celebrations: {
     enableAutoConfetti: true,
@@ -245,6 +253,8 @@ const portfolioDataExport = {
   workExperience,
   skills,
   projects,
+  certifications,
+  quotes,
   guideMessages,
   characterSettings,
   themeSettings,

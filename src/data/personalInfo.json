@@ -1,0 +1,23 @@
+{
+    "name": "Divyam Navin",
+    "title": "Information Technology Student & Web Developer",
+    "email": "divyamnavin@gmail.com",
+    "phone": "+91 7738127675",
+    "location": "Thane, Maharashtra, India",
+    "profileImage": "",
+    "bio": "Goal-driven IT student and web developer with strong skills in development, creativity, strategic thinking, and AI-assisted workflows. Passionate about building innovative solutions, leading teams, and applying technology to solve real-world problems.",
+    "socialLinks": {
+        "github": "https://github.com/Divyam1909",
+        "linkedin": "https://linkedin.com/in/divyam-navin",
+        "twitter": "",
+        "instagram": "https://www.instagram.com/divyam_n_19/",
+        "website": "dn-portfolio.pages.dev"
+    },
+    "seo": {
+        "title": "Divyam Navin - Information Technology Student & Web Developer",
+        "description": "Portfolio of Divyam Navin, an IT student and web developer passionate about innovation, full-stack development, and modern technologies.",
+        "keywords": "IT student, web developer, full stack, portfolio, JavaScript, Python",
+        "ogImage": "",
+        "twitterHandle": ""
+    }
+}

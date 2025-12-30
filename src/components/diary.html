@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vintage Project Diary</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=La+Belle+Aurore&family=IM+Fell+English+SC&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#2b2118',
+                        paper: '#f3e5ce',
+                        leather: '#3e2723',
+                        gold: '#c5a059',
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        display: ['"Cinzel"', 'serif'],
+                        hand: ['"La Belle Aurore"', 'cursive'],
+                        sc: ['"IM Fell English SC"', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --book-width: 360px;
+            --book-height: 520px;
+            --anim-speed: 0.8s;
+            --cursor-pen: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.4));"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 0 24, auto;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #121212;
+            background-image: radial-gradient(circle at center, #251d1a 0%, #0a0a0a 100%);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin: 0;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .scene {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2500px;
+            overflow: hidden;
+            transform-origin: center center;
+            transition: transform 0.3s ease-out;
+        }
+
+        .book {
+            position: relative;
+            width: var(--book-width);
+            height: var(--book-height);
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: var(--cursor-pen);
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform var(--anim-speed) cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        /* 3D Faces */
+        .front,
+        .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 3px 10px 10px 3px;
+            background-color: #f3e5ce;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            overflow: hidden;
+        }
+
+        /* Z-Index logic handled by JS to fix mirroring */
+        .front {
+            transform: rotateY(0deg) translateZ(1px);
+            box-shadow: inset 8px 0 15px -8px rgba(0, 0, 0, 0.15);
+        }
+
+        .back {
+            transform: rotateY(180deg) translateZ(1px);
+            box-shadow: inset -8px 0 15px -8px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background-color: #f3e5ce;
+        }
+
+        .paper-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 5;
+        }
+
+        .leather-texture {
+            background: linear-gradient(135deg, #3e2723 0%, #251614 100%);
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .cover-front {
+            border: 3px solid #4a3b32;
+            box-shadow: inset 8px 0 15px rgba(0, 0, 0, 0.5), inset -2px 0 5px rgba(255, 255, 255, 0.1), 10px 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .corner-gold {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .corner-gold svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.6));
+        }
+
+        .c-tl {
+            top: 0;
+            left: 0;
+            transform: rotate(0deg);
+        }
+
+        .c-tr {
+            top: 0;
+            right: 0;
+            transform: rotate(90deg);
+        }
+
+        .c-bl {
+            bottom: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .c-br {
+            bottom: 0;
+            right: 0;
+            transform: rotate(180deg);
+        }
+
+        .inside-cover-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #2b1d18;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+
+        .back-cover-base {
+            transform: rotateY(0deg) translateZ(-3px);
+            z-index: -1;
+            box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .front-cover-base {
+            transform: rotateY(180deg) translateZ(-3px);
+            z-index: -1;
+            transform-origin: left center;
+            box-shadow: -5px 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .hidden-base {
+            opacity: 0;
+        }
+
+        .polaroid {
+            background: white;
+            padding: 8px 8px 30px 8px;
+            box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s ease;
+            position: relative;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .polaroid:hover {
+            transform: scale(1.02);
+            box-shadow: 5px 12px 25px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+        }
+
+        .tape {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-1deg);
+            width: 60px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(3px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tech-badge {
+            font-family: 'IM Fell English SC', serif;
+            font-size: 0.75rem;
+            color: #5d4037;
+            border: 1px solid #c5a059;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(197, 160, 89, 0.15);
+            white-space: nowrap;
+        }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 20px;
+            font-family: 'IM Fell English SC', serif;
+            color: #8d7b68;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
+        }
+
+        .index-item {
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            padding: 8px 0 8px 25px;
+            border-bottom: 1px dashed rgba(197, 160, 89, 0.3);
+        }
+
+        .index-item:hover {
+            color: #3e2723;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        .index-item::before {
+            content: '❧';
+            position: absolute;
+            left: 5px;
+            color: #c5a059;
+            opacity: 0;
+            /* Hidden by default */
+            transition: opacity 0.3s ease;
+        }
+
+        .index-item:hover::before {
+            opacity: 1;
+            /* Visible on hover */
+        }
+
+        /* Improved Home Button */
+        .home-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            color: #8d7b68;
+            cursor: pointer;
+            opacity: 0.5;
+            z-index: 50;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0);
+            border: 1px solid transparent;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .home-btn:hover {
+            opacity: 1;
+            color: #3e2723;
+            background: rgba(255, 255, 255, 0.6);
+            border-color: #c5a059;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        img {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #scale-wrapper {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <svg width="0" height="0" style="position:absolute">
+        <defs>
+            <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#bf953f" />
+                <stop offset="30%" stop-color="#fcf6ba" />
+                <stop offset="60%" stop-color="#b38728" />
+                <stop offset="100%" stop-color="#aa771c" />
+            </linearGradient>
+
+            <symbol id="ornate-corner" viewBox="0 0 100 100">
+                <path d="M0,0 L100,0 L100,20 Q60,20 40,60 Q20,80 0,100 Z" fill="url(#gold-gradient)" />
+                <path d="M5,5 L90,5 L90,15 Q55,15 35,55 Q15,75 5,90 Z" fill="none" stroke="#5d4037" stroke-width="1"
+                    opacity="0.3" />
+                <circle cx="20" cy="20" r="4" fill="#3e2723" />
+            </symbol>
+
+            <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </symbol>
+        </defs>
+    </svg>
+
+    <div class="scene" id="scene">
+        <div id="scale-wrapper">
+            <div class="book" id="book">
+
+                <div class="inside-cover-bg front-cover-base" id="frontBase"></div>
+                <div class="inside-cover-bg back-cover-base" id="backBase"></div>
+
+                <!-- SHEET 1: Front Cover | Preface -->
+                <div class="page" id="p1" style="z-index: 6;">
+                    <div
+                        class="front face-front cover-front flex flex-col items-center justify-center text-center p-8 relative">
+                        <div class="leather-texture"></div>
+                        <div class="corner-gold c-tl"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-tr"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-bl"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-br"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+
+                        <div
+                            class="content-layer flex flex-col justify-between h-full border-2 border-[#c5a059] border-opacity-40 rounded-lg p-4 bg-transparent">
+                            <div class="mt-10">
+                                <h1
+                                    class="font-display text-4xl tracking-[0.2em] text-[#c5a059] uppercase drop-shadow-lg">
+                                    Project<br>Diary</h1>
+                                <div class="w-16 h-[1px] bg-[#c5a059] mx-auto my-6 opacity-70"></div>
+                                <p class="font-sc text-lg tracking-widest text-[#e0c080]">Portfolio Vol. I</p>
+                            </div>
+                            <div class="mb-4 text-[#c5a059] font-sc tracking-widest text-sm opacity-80">Author - D.N.
+                            </div>
+                            <div class="nav-hint text-[#c5a059]">Tap to Open</div>
+                        </div>
+                    </div>
+
+                    <div class="back face-back p-8 relative bg-[#f3e5ce]">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col items-center justify-center h-full text-center">
+                            <div class="font-hand text-2xl text-[#8d7b68] mb-4">Preface</div>
+                            <p class="font-serif italic text-ink text-lg w-3/4 leading-relaxed">
+                                "To the bugs that kept me up at night, and the solutions that greeted me at dawn."
+                            </p>
+                            <div class="w-8 h-[1px] bg-[#8d7b68] mt-6"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHEET 2: Index | P1 Image -->
+                <div class="page" id="p2" style="z-index: 5;">
+                    <div class="front face-front p-8 relative bg-[#f3e5ce] text-ink">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col h-full">
+                            <h2
+                                class="font-display text-2xl text-[#3e2723] border-b border-[#c5a059] pb-2 mb-6 text-center mt-2">
+                                Index</h2>
+
+                            <div class="space-y-4 font-sc text-lg text-[#5d4037] flex-grow">
+                                <div class="index-item" onclick="flipToPage(2)">I. Analytics Dashboard</div>
+                                <div class="index-item" onclick="flipToPage(3)">II. Echo Chambers</div>
+                                <div class="index-item" onclick="flipToPage(4)">III. Chronos</div>
+                            </div>
+
+                            <div class="text-center font-hand text-xs opacity-40">- i -</div>
+                        </div>
+                    </div>
+
+                    <div class="back face-back p-6 relative bg-[#f3e5ce]">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col items-center justify-center h-full">
+                            <div class="polaroid transform -rotate-1">
+                                <div class="tape"></div>
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=400&h=300"
+                                    class="w-full h-32 object-cover sepia-[0.3]" alt="P1">
+                                <div class="font-hand text-lg mt-3 text-center text-ink">Analytics Dashboard</div>
+                            </div>
+                            <div class="absolute bottom-6 left-6 font-hand text-xs opacity-40">Page 1</div>
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHEET 3: P1 Text | P2 Image -->
+                <div class="page" id="p3" style="z-index: 4;">
+                    <div class="front face-front p-8 relative bg-[#f3e5ce] text-ink">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col h-full">
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+
+                            <div class="absolute top-6 left-6 font-hand text-xl text-[#8d7b68]">Oct '23</div>
+                            <h2 class="font-display text-2xl mb-4 mt-8 text-[#3e2723] border-b border-[#c5a059] pb-2">
+                                Nebula</h2>
+                            <p class="font-serif text-lg leading-relaxed mb-4 text-[#2b2118]">A high-performance data
+                                visualization platform processing 50k+ points in real-time.</p>
+                            <div
+                                class="bg-[#e8dec6] p-3 border-l-4 border-[#8d7b68] italic font-serif text-base mb-6 shadow-sm">
+                                "Optimized rendering speed by 400% using windowing."</div>
+
+                            <div class="mt-auto">
+                                <h3 class="font-sc text-xs text-[#5d4037] mb-2 opacity-70">Stack</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tech-badge">React</span>
+                                    <span class="tech-badge">D3.js</span>
+                                    <span class="tech-badge">Node</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex gap-3 font-sc text-xs justify-center">
+                                <button
+                                    class="border border-[#3e2723] px-4 py-2 hover:bg-[#3e2723] hover:text-[#f3e5ce] transition duration-300">View
+                                    Project</button>
+                            </div>
+                            <div class="text-center font-hand text-xs mt-4 opacity-40">- 2 -</div>
+                        </div>
+                    </div>
+
+                    <div class="back face-back p-6 relative bg-[#f3e5ce]">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col items-center justify-center h-full">
+                            <div class="polaroid transform rotate-1">
+                                <div class="tape"></div>
+                                <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=400&h=300"
+                                    class="w-full h-32 object-cover sepia-[0.2]" alt="P2">
+                                <div class="font-hand text-lg mt-3 text-center text-ink">Echo Chambers</div>
+                            </div>
+                            <div class="absolute bottom-6 left-6 font-hand text-xs opacity-40">Page 3</div>
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHEET 4: P2 Text | P3 Image -->
+                <div class="page" id="p4" style="z-index: 3;">
+                    <div class="front face-front p-8 relative bg-[#f3e5ce] text-ink">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col h-full">
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+
+                            <div class="absolute top-6 left-6 font-hand text-xl text-[#8d7b68]">Jan '24</div>
+                            <h2 class="font-display text-2xl mb-4 mt-8 text-[#3e2723] border-b border-[#c5a059] pb-2">
+                                Echo</h2>
+                            <p class="font-serif text-lg leading-relaxed mb-4 text-[#2b2118]">A spatial audio social
+                                platform. Users move avatars in 2D space, volume adjusts on proximity.</p>
+                            <div
+                                class="bg-[#e8dec6] p-3 border-l-4 border-[#8d7b68] italic font-serif text-base mb-6 shadow-sm">
+                                "Solved the 'party problem' with geometric algorithms."</div>
+
+                            <div class="mt-auto">
+                                <h3 class="font-sc text-xs text-[#5d4037] mb-2 opacity-70">Stack</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tech-badge">WebRTC</span>
+                                    <span class="tech-badge">Socket.io</span>
+                                    <span class="tech-badge">Canvas</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex gap-3 font-sc text-xs justify-center">
+                                <button
+                                    class="border border-[#3e2723] px-4 py-2 hover:bg-[#3e2723] hover:text-[#f3e5ce] transition duration-300">View
+                                    Project</button>
+                            </div>
+                            <div class="text-center font-hand text-xs mt-4 opacity-40">- 4 -</div>
+                        </div>
+                    </div>
+
+                    <div class="back face-back p-6 relative bg-[#f3e5ce]">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col items-center justify-center h-full">
+                            <div class="polaroid transform -rotate-1">
+                                <div class="tape"></div>
+                                <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?auto=format&fit=crop&q=80&w=400&h=300"
+                                    class="w-full h-32 object-cover sepia-[0.4]" alt="P3">
+                                <div class="font-hand text-lg mt-3 text-center text-ink">Chronos App</div>
+                            </div>
+                            <div class="absolute bottom-6 left-6 font-hand text-xs opacity-40">Page 5</div>
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHEET 5: P3 Text | Back Cover -->
+                <div class="page" id="p5" style="z-index: 2;">
+                    <div class="front face-front p-8 relative bg-[#f3e5ce] text-ink">
+                        <div class="paper-texture"></div>
+                        <div class="content-layer flex flex-col h-full">
+                            <div class="home-btn" onclick="flipToPage(1)" title="Back to Index"><svg>
+                                    <use href="#icon-home" />
+                                </svg></div>
+
+                            <div class="absolute top-6 left-6 font-hand text-xl text-[#8d7b68]">Mar '24</div>
+                            <h2 class="font-display text-2xl mb-4 mt-8 text-[#3e2723] border-b border-[#c5a059] pb-2">
+                                Chronos</h2>
+                            <p class="font-serif text-lg leading-relaxed mb-4 text-[#2b2118]">A productivity tool
+                                focusing on "Flow State". Blocks distractions using Pomodoro.</p>
+                            <div
+                                class="bg-[#e8dec6] p-3 border-l-4 border-[#8d7b68] italic font-serif text-base mb-6 shadow-sm">
+                                "Achieved sub-100ms sync across mobile and desktop."</div>
+
+                            <div class="mt-auto">
+                                <h3 class="font-sc text-xs text-[#5d4037] mb-2 opacity-70">Stack</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="tech-badge">RN</span>
+                                    <span class="tech-badge">Firebase</span>
+                                    <span class="tech-badge">Electron</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex gap-3 font-sc text-xs justify-center">
+                                <button
+                                    class="border border-[#3e2723] px-4 py-2 hover:bg-[#3e2723] hover:text-[#f3e5ce] transition duration-300">App
+                                    Store</button>
+                            </div>
+                            <div class="text-center font-hand text-xs mt-4 opacity-40">- 6 -</div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="back face-back cover-front flex flex-col items-center justify-center text-center p-8 text-[#c5a059] relative">
+                        <div class="leather-texture"></div>
+                        <div class="corner-gold c-tl"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-tr"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-bl"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+                        <div class="corner-gold c-br"><svg>
+                                <use href="#ornate-corner" />
+                            </svg></div>
+
+                        <div
+                            class="content-layer flex flex-col justify-center items-center border border-[#c5a059] border-opacity-30 rounded p-4 h-full bg-transparent">
+                            <div class="font-display text-xl leading-relaxed mb-6 drop-shadow-md">"Every project here
+                                started with a <span class="italic text-white">question</span>, not a feature."</div>
+                            <div class="w-16 h-1 bg-[#c5a059] opacity-60 mb-6"></div>
+                            <a href="mailto:contact@example.com"
+                                class="font-sc text-base border border-[#c5a059] px-6 py-2 hover:bg-[#c5a059] hover:text-[#3e2723] transition-colors shadow-lg">Contact
+                                Me</a>
+                            <div class="nav-hint text-[#c5a059] mt-8">Reopen</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pages = document.querySelectorAll('.page');
+        const book = document.getElementById('book');
+        const scaleWrapper = document.getElementById('scale-wrapper');
+        const frontBase = document.getElementById('frontBase');
+        const backBase = document.getElementById('backBase');
+        const numPages = pages.length;
+        let currentPage = 0;
+
+        // --- Responsive Scaling ---
+        function optimizeScreen() {
+            const padding = 20;
+            const bookWidth = 360;
+            const bookHeight = 520;
+
+            const targetWidth = bookWidth * 2.1;
+            const targetHeight = bookHeight * 1.1;
+
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            const scaleX = (winW - padding) / targetWidth;
+            const scaleY = (winH - padding) / targetHeight;
+
+            let scale = Math.min(scaleX, scaleY);
+            if (scale > 1.2) scale = 1.2;
+
+            scaleWrapper.style.transform = `scale(${scale})`;
+            updateBookState();
+        }
+
+        function updateBookState() {
+            if (currentPage === 0) {
+                // Closed Front
+                book.style.transform = `translateX(0%)`;
+                frontBase.classList.add('hidden-base');
+                backBase.classList.add('hidden-base');
+            }
+            else if (currentPage === numPages) {
+                // Closed Back
+                book.style.transform = `translateX(100%)`;
+                frontBase.classList.add('hidden-base');
+                backBase.classList.add('hidden-base');
+            }
+            else {
+                // Open
+                book.style.transform = `translateX(50%)`;
+                frontBase.classList.remove('hidden-base');
+                backBase.classList.remove('hidden-base');
+            }
+        }
+
+        function updateZIndex(movingIndex = -1) {
+            pages.forEach((page, index) => {
+                let z = 0;
+
+                // Stack Logic
+                if (index < currentPage) {
+                    // Left Stack (stacks upwards)
+                    z = index + 1;
+
+                    // CRITICAL FIX: Ensure proper face layering when page is on left (flipped)
+                    // When flipped, the BACK face should be on top of the FRONT face.
+                    const front = page.querySelector('.face-front');
+                    const back = page.querySelector('.face-back');
+                    if (front && back) {
+                        // Force Back to be higher z-index than Front when flipped
+                        back.style.zIndex = 5;
+                        front.style.zIndex = 1;
+                    }
+
+                } else {
+                    // Right Stack (stacks downwards)
+                    z = numPages - index;
+
+                    // CRITICAL FIX: Ensure proper face layering when page is on right (not flipped)
+                    // When not flipped, the FRONT face should be on top.
+                    const front = page.querySelector('.face-front');
+                    const back = page.querySelector('.face-back');
+                    if (front && back) {
+                        front.style.zIndex = 5;
+                        back.style.zIndex = 1;
+                    }
+                }
+
+                // Animation override
+                if (index === movingIndex) {
+                    z = numPages + 10;
+                }
+                page.style.zIndex = z;
+            });
+        }
+
+        function flipPage(forward) {
+            const index = forward ? currentPage : currentPage - 1;
+            const page = pages[index];
+            if (!page) return;
+
+            playPageTurnSound();
+            page.classList.add('moving');
+
+            // Trigger Z-Index swap halfway through animation to fix mirroring
+            // This prevents the "backwards text" from being visible during the flip
+            setTimeout(() => {
+                updateZIndex(index);
+            }, 300); // 300ms is approx mid-flip for 0.8s transition
+
+            if (forward) {
+                page.classList.add('flipped');
+                currentPage++;
+            } else {
+                page.classList.remove('flipped');
+                currentPage--;
+            }
+
+            updateBookState();
+
+            // Immediate Z-update for stack order, detailed face swap happens in timeout/updateZIndex
+            updateZIndex(index);
+
+            setTimeout(() => {
+                page.classList.remove('moving');
+                updateZIndex(); // Final cleanup
+            }, 800);
+        }
+
+        function flipToPage(targetIndex) {
+            if (targetIndex === currentPage) return;
+            const diff = targetIndex - currentPage;
+            const direction = diff > 0;
+            const steps = Math.abs(diff);
+
+            let delay = 0;
+            const stepDelay = 150;
+
+            for (let i = 0; i < steps; i++) {
+                setTimeout(() => {
+                    flipPage(direction);
+                }, delay);
+                delay += stepDelay;
+            }
+        }
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playPageTurnSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const t = audioCtx.currentTime;
+            const bufferSize = audioCtx.sampleRate * 0.6;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(600, t);
+            filter.frequency.exponentialRampToValueAtTime(100, t + 0.5);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.3, t + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start(t);
+            noise.stop(t + 0.6);
+        }
+
+        pages.forEach((page, index) => {
+            page.querySelector('.front').addEventListener('click', (e) => {
+                if (e.target.closest('button') || e.target.closest('.index-item') || e.target.closest('.home-btn')) return;
+                e.stopPropagation();
+                if (index === currentPage) flipPage(true);
+            });
+            page.querySelector('.back').addEventListener('click', (e) => {
+                if (e.target.closest('button') || e.target.closest('.home-btn')) return;
+                e.stopPropagation();
+                if (index === currentPage - 1) flipPage(false);
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            optimizeScreen();
+        });
+
+        // Initial Load
+        optimizeScreen();
+        updateZIndex();
+
+    </script>
+</body>
+
+</html>
