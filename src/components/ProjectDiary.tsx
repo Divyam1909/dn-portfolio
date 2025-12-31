@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useEffect } from 'react';
+import React, { forwardRef, useRef, useEffect, useState } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import './Diary.css';
 
@@ -234,6 +234,21 @@ const BackCover = forwardRef((props: any, ref: any) => (
 export const ProjectDiary = ({ projects = [] }: any) => {
     const bookRef = useRef<any>(null);
     const flipTimeoutRef = useRef<any>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        // Initial check
+        checkMobile();
+
+        // Listen for resize events
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Clean up timeout on unmount to prevent memory leaks
     useEffect(() => {
@@ -303,32 +318,56 @@ export const ProjectDiary = ({ projects = [] }: any) => {
         flipSequentially(targetPage);
     };
 
+    // Responsive dimensions
+    const bookWidth = isMobile ? Math.min(window.innerWidth - 40, 320) : 360;
+    const bookHeight = isMobile ? Math.min(window.innerHeight - 200, 480) : 520;
+
     return (
-        <div className="diary-scene" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '600px', padding: '0.5rem' }}>
+        <div className="diary-scene" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: isMobile ? '450px' : '600px', padding: '0.5rem' }}>
             <GoldGradient />
+
+            {/* Mobile hint message */}
+            {isMobile && (
+                <div className="mobile-hint" style={{
+                    fontFamily: '"IM Fell English SC", serif',
+                    fontSize: '1.5rem',
+                    color: '#3e2723',
+                    textAlign: 'center',
+                    padding: '0.6rem 1.25rem',
+                    marginBottom: '0.75rem',
+                    background: 'linear-gradient(135deg, #f3e5ce 0%, #e8dec6 100%)',
+                    borderRadius: '4px',
+                    border: '2px solid #c5a059',
+                    boxShadow: '0 2px 8px rgba(62, 39, 35, 0.15)',
+                    maxWidth: '90%'
+                }}>
+                    ❧ Switch to desktop for better experience ❧
+                </div>
+            )}
+
             <HTMLFlipBook
-                width={360}
-                height={520}
+                width={bookWidth}
+                height={bookHeight}
                 size="fixed"
-                minWidth={300}
-                maxWidth={500}
-                minHeight={400}
-                maxHeight={700}
+                minWidth={isMobile ? 280 : 300}
+                maxWidth={isMobile ? 350 : 500}
+                minHeight={isMobile ? 350 : 400}
+                maxHeight={isMobile ? 500 : 700}
                 maxShadowOpacity={0.5}
                 showCover={true}
                 mobileScrollSupport={true}
-                className="diary-book"
+                className={`diary-book ${isMobile ? 'diary-book--mobile' : ''}`}
                 ref={bookRef}
                 style={{ margin: '0 auto' }}
                 startPage={0}
                 drawShadow={true}
                 flippingTime={800} /* Matched in flipSequentially timeout */
-                usePortrait={false}
+                usePortrait={isMobile}
                 startZIndex={0}
                 autoSize={true}
                 clickEventForward={true}
                 useMouseEvents={true}
-                swipeDistance={20}
+                swipeDistance={isMobile ? 30 : 20}
                 showPageCorners={true}
                 disableFlipByClick={false}
             >

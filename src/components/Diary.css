@@ -332,3 +332,169 @@
 .sepia-low {
     filter: sepia(0.3);
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Mobile hint styling */
+.mobile-hint {
+    animation: fadeInHint 0.5s ease-out;
+}
+
+@keyframes fadeInHint {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile-specific diary adjustments */
+@media screen and (max-width: 768px) {
+    :root {
+        --book-width: 300px;
+        --book-height: 450px;
+    }
+
+    .diary-scene {
+        min-height: 450px;
+        padding: 0.25rem;
+        perspective: 1500px;
+    }
+
+    .diary-book--mobile {
+        transform: scale(1);
+    }
+
+    /* Adjust inner page frame for mobile */
+    .inner-page-frame {
+        padding: 0.75rem;
+    }
+
+    .inner-page-frame::after {
+        inset: 4px;
+        border-width: 2px;
+    }
+
+    /* Reduce corner decoration size on mobile */
+    .corner-gold {
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Adjust typography for mobile */
+    .cover-front h1,
+    .font-display.text-4xl {
+        font-size: 1.75rem !important;
+    }
+
+    .font-display.text-2xl {
+        font-size: 1.25rem !important;
+    }
+
+    .font-serif.text-lg,
+    .font-hand.text-2xl {
+        font-size: 1rem !important;
+    }
+
+    .font-sc.text-lg {
+        font-size: 0.9rem !important;
+    }
+
+    /* Adjust polaroid for mobile */
+    .polaroid {
+        width: 85%;
+        padding: 6px 6px 20px 6px;
+    }
+
+    .polaroid img {
+        height: 120px !important;
+    }
+
+    /* Adjust tech badges for mobile */
+    .tech-badge {
+        font-size: 0.65rem;
+        padding: 2px 4px;
+    }
+
+    /* Adjust index items for mobile */
+    .index-item {
+        padding: 6px 0 6px 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Adjust page numbers for mobile */
+    .page-number {
+        font-size: 0.7rem;
+    }
+
+    .page-number--bottom {
+        bottom: 1rem;
+    }
+
+    /* Adjust nav hint for mobile */
+    .nav-hint {
+        font-size: 0.7rem;
+    }
+
+    /* Home button adjustment */
+    .home-btn {
+        top: 0.75rem !important;
+        right: 0.75rem !important;
+    }
+
+    .home-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Adjust bordered content padding */
+    .bordered-content {
+        padding: 0.75rem;
+    }
+
+    /* Adjust buttons for mobile */
+    .inner-page-frame a {
+        padding: 0.4rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Extra small mobile devices */
+@media screen and (max-width: 400px) {
+    .diary-scene {
+        min-height: 400px;
+    }
+
+    .inner-page-frame {
+        padding: 0.5rem;
+    }
+
+    .corner-gold {
+        width: 28px;
+        height: 28px;
+    }
+
+    .polaroid {
+        width: 90%;
+    }
+
+    .polaroid img {
+        height: 100px !important;
+    }
+
+    .tech-badge {
+        font-size: 0.6rem;
+        padding: 1px 3px;
+    }
+
+    .mobile-hint {
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.75rem !important;
+    }
+}
