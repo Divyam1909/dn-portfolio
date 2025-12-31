@@ -160,27 +160,50 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
         metalness: 0.05,
       });
       const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial);
-      
+
       // Position planet
       planetMesh.position.x = data.dist;
       planetMesh.userData = { label: data.label, name: data.name };
       orbitGroup.add(planetMesh);
       orbitGroup.rotation.y = data.initialAngle;
-      
+
       // Add rings for Saturn
       if (data.hasRings) {
         const ringTexture = loader.load('/textures/saturn_ring.png');
-        const ringGeometry = new THREE.RingGeometry(data.size * 1.5, data.size * 2.5, 128);
-        const ringMaterial = new THREE.MeshStandardMaterial({
+        ringTexture.colorSpace = THREE.SRGBColorSpace;
+
+        // Create ring geometry with more segments for smoother appearance
+        const innerRadius = data.size * 1.4;
+        const outerRadius = data.size * 2.8;
+        const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 128, 1);
+
+        // Fix UV mapping for ring texture - remap from polar to radial bands
+        // This makes the texture stretch from inner to outer edge properly
+        const pos = ringGeometry.attributes.position;
+        const uv = ringGeometry.attributes.uv;
+        const v3 = new THREE.Vector3();
+
+        for (let i = 0; i < pos.count; i++) {
+          v3.fromBufferAttribute(pos, i);
+          // Calculate radial distance from center (0-1 range)
+          const dist = v3.length();
+          const normalizedDist = (dist - innerRadius) / (outerRadius - innerRadius);
+          // Set UV: u = radial position (for ring bands), v = angle (wraps around)
+          uv.setXY(i, normalizedDist, 1);
+        }
+
+        const ringMaterial = new THREE.MeshBasicMaterial({
           map: ringTexture,
           side: THREE.DoubleSide,
           transparent: true,
-          opacity: 0.8,
-          roughness: 0.6,
-          metalness: 0.1,
+          opacity: 0.9,
+          depthWrite: false, // Prevents z-fighting artifacts
         });
+
         const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = Math.PI / 2 - 0.3; // Slight tilt for realism
+        // Saturn's axial tilt is ~26.7 degrees
+        ring.rotation.x = -Math.PI / 2;
+        ring.rotation.y = 0.46; // ~26.7 degrees tilt
         planetMesh.add(ring);
       }
 
@@ -197,7 +220,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
           const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
           moonMesh.position.x = moonData.dist;
           moonGroup.add(moonMesh);
-          
+
           moonGroups.push({
             group: moonGroup,
             mesh: moonMesh,
@@ -236,9 +259,9 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       });
       const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
       scene.add(orbitLine);
-      
+
       scene.add(orbitGroup);
-      
+
       planets.push({
         mesh: planetMesh,
         orbitGroup: orbitGroup,
@@ -286,30 +309,30 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
             const geometry = planet.mesh.geometry as THREE.SphereGeometry;
             const distance = (geometry.parameters?.radius || 1) * 5;
             const newPos = targetPos.clone().add(direction.multiplyScalar(distance));
-            
+
             const startPos = camera.position.clone();
             const duration = 1000;
             const startTime = Date.now();
-            
+
             const animateCamera = () => {
               const elapsed = Date.now() - startTime;
               const progress = Math.min(elapsed / duration, 1);
               const eased = progress < 0.5
                 ? 4 * progress * progress * progress
                 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-              
+
               camera.position.lerpVectors(startPos, newPos, eased);
               camera.lookAt(targetPos);
               controls.target.copy(targetPos);
               controls.update();
-              
+
               if (progress < 1) {
                 requestAnimationFrame(animateCamera);
               } else {
                 onPlanetClick(planet.route);
               }
             };
-            
+
             animateCamera();
           }
         }
@@ -329,7 +352,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     container.appendChild(labelsContainer);
 
     const labelElements: { div: HTMLDivElement; planet: THREE.Mesh; route?: string }[] = [];
-    
+
     // Sun label (decreased size)
     const sunLabelDiv = document.createElement('div');
     sunLabelDiv.setAttribute('data-comet-clickable', 'sun-label');
@@ -427,7 +450,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
             star.startPos.y - 20,
             star.startPos.z - 30
           );
-          
+
           const points = [star.startPos.clone(), star.startPos.clone()];
           star.mesh.geometry.setFromPoints(points);
           star.mesh.material.opacity = 1;
@@ -442,7 +465,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
             const currentPos = star.startPos.clone().lerp(star.endPos, progress);
             const trailStart = currentPos.clone();
             const trailEnd = star.startPos.clone().lerp(star.endPos, Math.max(0, progress - 0.1));
-            
+
             const points = [trailStart, trailEnd];
             star.mesh.geometry.setFromPoints(points);
             star.mesh.material.opacity = 1 - progress;
@@ -493,12 +516,12 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
       window.removeEventListener('click', onMouseClick);
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationId);
-      
+
       // Remove labels
       if (container.contains(labelsContainer)) {
         container.removeChild(labelsContainer);
       }
-      
+
       // Dispose
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
@@ -508,10 +531,10 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
           }
         }
       });
-      
+
       renderer.dispose();
       composer.dispose();
-      
+
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -529,32 +552,32 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
     if (resetTrigger > 0 && cameraRef.current && controlsRef.current) {
       const camera = cameraRef.current;
       const controls = controlsRef.current;
-      
+
       // Smoothly animate camera back to default position
       const startPos = camera.position.clone();
       const targetPos = new THREE.Vector3(0, 20, 40);
       const startTarget = controls.target.clone();
       const targetCenter = new THREE.Vector3(0, 0, 0);
-      
+
       const duration = 1000;
       const startTime = Date.now();
-      
+
       const animateReset = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const eased = progress < 0.5
           ? 4 * progress * progress * progress
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        
+
         camera.position.lerpVectors(startPos, targetPos, eased);
         controls.target.lerpVectors(startTarget, targetCenter, eased);
         controls.update();
-        
+
         if (progress < 1) {
           requestAnimationFrame(animateReset);
         }
       };
-      
+
       animateReset();
     }
   }, [resetTrigger]);
