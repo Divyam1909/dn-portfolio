@@ -9,7 +9,6 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  useMediaQuery,
   useTheme,
   Divider,
   Button,

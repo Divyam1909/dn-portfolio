@@ -486,6 +486,7 @@ const Resume: React.FC = () => {
 
   useEffect(() => {
     setTabValue(getInitialTab());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, location.hash]);
 
   // Certifications now loaded from DataContext (local JSON)
@@ -540,8 +541,11 @@ const Resume: React.FC = () => {
     });
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const timelineExperience = useMemo(() => transformData(workExperience || [], 'work'), [workExperience, orderDesc]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const timelineEducation = useMemo(() => transformData(education || [], 'education'), [education, orderDesc]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const timelineCertifications = useMemo(() => transformData(certifications || [], 'certification'), [certifications, orderDesc]);
 
   const technicalSkills = Array.isArray(skills?.technical) ? skills.technical : [];

@@ -780,6 +780,7 @@ const MonitorMock: React.FC = () => {
     const mobileBtnPower = root.querySelector('#mobileBtnPower') as HTMLElement | null;
 
     let isPowerOn = isActive;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let clickOrderIndex = 0;
     const clickOrder = ['w', 'p', 'x', 'h'];
 

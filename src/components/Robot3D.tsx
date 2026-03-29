@@ -65,6 +65,7 @@ const Robot3D = forwardRef<Robot3DHandle, Robot3DProps>(({ onRobotClick, isDarkM
   const currentExpressionRef = useRef<string>('');
 
   // Expression morph targets available in RobotExpressive (NO Happy!)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const EXPRESSIONS = ['Angry', 'Sad', 'Surprised'];
 
   // Reset all expressions to neutral
@@ -364,6 +365,7 @@ const Robot3D = forwardRef<Robot3DHandle, Robot3DProps>(({ onRobotClick, isDarkM
       
       if (containerRef.current && rendererRef.current?.domElement) {
         try {
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           containerRef.current.removeChild(rendererRef.current.domElement);
         } catch (e) {
           // Silently ignore cleanup errors

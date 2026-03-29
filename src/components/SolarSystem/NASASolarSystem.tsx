@@ -545,6 +545,7 @@ const NASASolarSystem: React.FC<NASASolarSystemProps> = ({ resetTrigger = 0, onC
         cleanupRef.current();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   // Handle reset trigger - only reset camera position

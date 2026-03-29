@@ -53,7 +53,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     quotes: quotesData,
   }));
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   // Initialize with defaults that will be replaced with stored values
   const [guideSettings, setGuideSettings] = useState<GuideSettings>({

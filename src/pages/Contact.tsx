@@ -5,9 +5,6 @@ import {
   useTheme,
   Paper,
   IconButton,
-  Dialog,
-  DialogContent,
-  DialogTitle,
 } from '@mui/material';
 import {
   Email as EmailIcon,
@@ -25,9 +22,6 @@ import {
   CalendarToday as CalendarIcon,
   Map as MapIcon,
   ShoppingCart as ShopIcon,
-  Book as BookIcon,
-  SportsEsports as GameIcon,
-  Settings as SettingsIcon,
   Mail as MailIcon,
   AccountCircle as AccountCircleIcon,
 } from '@mui/icons-material';
@@ -312,6 +306,8 @@ const Contact: React.FC = () => {
                             autoComplete="off"
                             title="Search"
                             role="combobox"
+                            aria-controls="search-listbox"
+                            aria-expanded={false}
                             value={portfolioUrl}
                             readOnly
                           />
@@ -338,7 +334,7 @@ const Contact: React.FC = () => {
                   >
                     <img 
                       src={personalInfo.profileImage || animePhoto} 
-                      alt={`${personalInfo.name} profile photo`}
+                      alt={`${personalInfo.name} profile`}
                       className="profile-image"
                     />
                   </div>
@@ -526,7 +522,7 @@ const Contact: React.FC = () => {
                   <Box sx={{ mt: 2, mb: 3, textAlign: 'center' }}>
                     <img 
                       src={personalInfo.profileImage || animePhoto} 
-                      alt={`${personalInfo.name} profile photo`}
+                      alt={`${personalInfo.name} profile`}
                       style={{
                         width: '100%',
                         maxWidth: '300px',

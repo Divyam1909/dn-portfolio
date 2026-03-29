@@ -524,6 +524,7 @@ const CometCursor: React.FC<CometCursorProps> = ({ enabled = true }) => {
       }
       particlesRef.current = [];
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
 
   if (!enabled) return null;

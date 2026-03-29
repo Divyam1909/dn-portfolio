@@ -5,8 +5,6 @@ import {
   Tooltip,
   Paper,
   Typography,
-  useTheme,
-  useMediaQuery,
   Container,
   Button,
 } from '@mui/material';
@@ -27,8 +25,6 @@ interface UniverseViewProps {
 
 const UniverseView: React.FC<UniverseViewProps> = ({ toggleView, navigateToRoute }) => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [showInfo, setShowInfo] = useState(false);
   const [showHint, setShowHint] = useState(true);
   const [legendCollapsed, setLegendCollapsed] = useState(true);

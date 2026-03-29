@@ -84,7 +84,6 @@ const UniverseQuote: React.FC<UniverseQuoteProps> = ({
     // Calculate visibility based on camera distance
     // Show quote when distance > 30, hide when distance < 30
     const isVisible = cameraDistance > 30;
-    const shouldScatter = cameraDistance <= 30;
 
     // Split quote into individual characters for letter-by-letter particle effect
     const text = quote.text;

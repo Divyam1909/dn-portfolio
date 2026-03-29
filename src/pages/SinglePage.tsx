@@ -10,8 +10,6 @@ import Contact from './Contact';
 
 type SectionKey = 'home' | 'about' | 'resume' | 'projects' | 'contact';
 
-const sectionOrder: SectionKey[] = ['home', 'about', 'resume', 'projects', 'contact'];
-
 type SectionDefinition = {
   key: SectionKey;
   label: string;
@@ -252,12 +250,14 @@ const SinglePage: React.FC = () => {
   }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
+    const timeoutRef = manualScrollUnlockTimeoutRef;
+    const intervalRef = manualScrollUnlockIntervalRef;
     return () => {
-      if (manualScrollUnlockTimeoutRef.current) {
-        window.clearTimeout(manualScrollUnlockTimeoutRef.current);
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
       }
-      if (manualScrollUnlockIntervalRef.current) {
-        window.clearInterval(manualScrollUnlockIntervalRef.current);
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
       }
     };
   }, []);
