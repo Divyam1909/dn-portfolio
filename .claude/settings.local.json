@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(CI=true npm run build)"
+      "Bash(CI=true npm run build)",
+      "Bash(node -e \"const {JSDOM} = require\\(''jsdom''\\); \")",
+      "Bash(npx eslint:*)"
     ]
   }
 }
