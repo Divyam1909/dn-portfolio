@@ -592,15 +592,17 @@ const Resume: React.FC = () => {
             startIcon={<DownloadIcon />}
             variant="contained"
             color="primary"
-            onClick={async () => {
+            onClick={() => {
               const url = `${process.env.PUBLIC_URL}/uploads/divyam_resume.pdf`;
-              const res = await fetch(url);
-              const blob = await res.blob();
-              const a = document.createElement('a');
-              a.href = URL.createObjectURL(blob);
-              a.download = 'divyam_resume.pdf';
-              a.click();
-              URL.revokeObjectURL(a.href);
+              fetch(url)
+                .then((res) => res.blob())
+                .then((blob) => {
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(blob);
+                  a.download = 'divyam_resume.pdf';
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                });
             }}
             sx={{ borderRadius: 20, textTransform: 'none', fontWeight: 600 }}
           >
