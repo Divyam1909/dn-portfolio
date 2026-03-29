@@ -74,7 +74,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ onAnimation }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question: input }),
+        body: JSON.stringify({
+          question: input,
+          // Send last 8 messages as history (4 turns), skipping the initial greeting
+          history: messages.slice(1).slice(-8).map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'bot',
+            text: msg.text,
+          })),
+        }),
       });
 
       const contentType = response.headers.get('content-type') || '';

@@ -6,12 +6,15 @@ function enforceIdentity(answer) {
   if (!answer) return "I'm Pixel, Divyam's assistant! How can I help?";
 
   const replacements = [
+    // Strip hollow openers that make responses sound fake
+    [/^(absolutely|of course|certainly|sure|happy to help|glad you asked|great to hear)[!,]?\s*/i, ""],
+    [/^(i'm happy to (help|share)|i'd be happy to)[^.]*\.\s*/i, ""],
     // Remove common "LLM-y" filler that sounds generic or meta
     [/that's a great question!?\s*/gi, ""],
     [/great question!?\s*/gi, ""],
     [/i don't see any (specific )?(weakness(es)?|weak points?|shortcomings?) mentioned[^.]*\.\s*/gi, ""],
     [/i (don't|do not) see any (specific )?[^.]*mentioned[^.]*\.\s*/gi, ""],
-    [/based on (the|this) (resume|profile|information)[^.]*\.\s*/gi, ""],
+    [/,?\s*based on (the|this) (resume|profile|information)[^,.]*/gi, ""],
     [/i am a large language model/gi, "I'm Pixel, Divyam's assistant"],
     [/large language model/gi, "Pixel, Divyam's assistant"],
     [/language model/gi, "Pixel, Divyam's assistant"],
@@ -37,7 +40,7 @@ function enforceIdentity(answer) {
   return enforceBrevity(out);
 }
 
-// Keep responses short but complete (max 3 sentences)
+// Keep responses short but complete (max 4 sentences)
 function enforceBrevity(text) {
   if (!text) return text;
   
@@ -59,7 +62,7 @@ function enforceBrevity(text) {
   
   // Now split by actual sentence endings
   const sentences = temp.match(/[^.!?]+[.!?]+/g) || [temp];
-  let result = sentences.slice(0, 3).join(' ').trim();
+  let result = sentences.slice(0, 4).join(' ').trim();
   
   // Restore abbreviations
   result = result
@@ -195,7 +198,7 @@ export default {
     }
 
     try {
-      const { question } = await request.json();
+      const { question, history = [] } = await request.json();
       const qNorm = String(question || '').trim().toLowerCase();
 
       // Optional: attach your public resume PDF as private context (never mention it in the reply).
@@ -233,12 +236,19 @@ export default {
         }
       }
 
-      // Deterministic "Who is Divyam?" response to avoid occasional truncation like "is a B.Tech"
-      // and ensure the core facts are always correct and complete.
+      // Deterministic "Tell me about / Who is Divyam?" response to avoid occasional truncation.
       if (
         qNorm === 'who is divyam' ||
         qNorm === 'who is divyam?' ||
-        qNorm.includes('who is divyam')
+        qNorm.includes('who is divyam') ||
+        qNorm === 'tell me about divyam' ||
+        qNorm === 'about divyam' ||
+        qNorm.includes('tell me about divyam') ||
+        qNorm.includes('about divyam') ||
+        qNorm === 'who is he' ||
+        qNorm === 'who is divyam navin' ||
+        qNorm.includes('introduce divyam') ||
+        qNorm.includes('describe divyam')
       ) {
         const rawAnswer =
           "Divyam Navin is a B.Tech Information Technology student at Fr. C. R. Institute of Technology, currently holding a 9.74 CGPA. What really sets him apart is his 5 internships and his role as E‑Cell Secretary & Startup Coordinator — he applies what he learns and leads.";
@@ -254,7 +264,169 @@ export default {
         });
       }
 
-      // Deterministic "weakness" answer (no AI/meta talk; framed as growth)
+      // Deterministic: projects
+      if (
+        qNorm.includes('project') ||
+        qNorm === 'what has he built' ||
+        qNorm === 'what did he build' ||
+        qNorm.includes('what has he made') ||
+        qNorm.includes('portfolio work')
+      ) {
+        const rawAnswer =
+          "His standout projects include EduSage — a live AI-powered education management platform built on the MERN stack with Python (edu-sage.vercel.app), and Wave Habitat, a production hardware integration system he built and deployed at Arms Robotics for Reliance's Vantara Animal Kingdom. He's also co-developing M.A.S.K., an encryption project in collaboration with IIT Dharwad. The range — ed-tech, industrial IoT, and cryptography — shows how varied his technical work actually is.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: skills / tech stack
+      if (
+        qNorm.includes('skill') ||
+        qNorm.includes('tech stack') ||
+        qNorm.includes('technologies') ||
+        qNorm === 'what can he do' ||
+        qNorm === 'what does he know' ||
+        qNorm.includes('programming') ||
+        qNorm.includes('languages he knows') ||
+        qNorm.includes('technical expertise')
+      ) {
+        const rawAnswer =
+          "On the technical side: advanced Python and HTML, solid JavaScript, full-stack MERN (MongoDB, Express, React, Node.js), plus AI/ML, embedded systems, and IoT from his Arms Robotics work. He's also done serious digital marketing — SEO, social campaigns, PR writing, backlink strategy, organic lead generation. That cross-functional range is genuinely rare for a student.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: experience / internships
+      if (
+        qNorm.includes('internship') ||
+        qNorm.includes('work experience') ||
+        qNorm.includes('experience') ||
+        qNorm.includes('companies') ||
+        qNorm.includes('where has he worked') ||
+        qNorm === 'his background'
+      ) {
+        const rawAnswer =
+          "He's completed 5 internships: IT engineering at Arms Robotics (production systems at Reliance's Vantara), web development at VanillaKart (20% engagement boost across 100+ product pages), digital marketing at Finnfluent Education (15+ creatives, 4 PR articles, 30+ SEO backlinks), fundraising campaigns at Pawzzitive Welfare Foundation (₹10,000 raised, 1000+ donors), and teaching at Vijay Shekhar Academy (mentored 30+ students). He received a Letter of Recommendation from every single employer — a clean record across very different industries.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: why hire / is he a good candidate
+      if (
+        qNorm.includes('why hire') ||
+        qNorm.includes('should i hire') ||
+        qNorm.includes('good candidate') ||
+        qNorm.includes('worth hiring') ||
+        qNorm.includes('recommend him') ||
+        qNorm.includes('good fit') ||
+        qNorm.includes('hire divyam') ||
+        qNorm === 'is he good'
+      ) {
+        const rawAnswer =
+          "The short version: 9.74 CGPA, 5 internships, and Letters of Recommendation from every single employer. He's worked across full-stack development, AI/ML, IoT, and digital marketing — not just one lane. He also leads the college's entrepreneurship cell, which means he operates well beyond just writing code. The academics and the real-world track record back each other up.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: CGPA / academics / grades
+      if (
+        qNorm.includes('cgpa') ||
+        qNorm.includes('grades') ||
+        qNorm.includes('academic') ||
+        qNorm.includes('marks') ||
+        qNorm.includes('score') ||
+        qNorm === 'how smart is he' ||
+        qNorm.includes('percentile')
+      ) {
+        const rawAnswer =
+          "9.74 CGPA in his second year, up from 9.5 in his first — so the trajectory is upward, not plateauing. Before college, he scored in the 97.5th CET percentile. What makes it more impressive: he's achieved this alongside 5 internships and running the E-Cell.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: leadership / E-Cell
+      if (
+        qNorm.includes('leadership') ||
+        qNorm.includes('e-cell') ||
+        qNorm.includes('ecell') ||
+        qNorm.includes('entrepreneurship') ||
+        qNorm.includes('secretary') ||
+        qNorm.includes('coordinator') ||
+        qNorm.includes('startup') ||
+        qNorm.includes('e cell')
+      ) {
+        const rawAnswer =
+          "He's currently the E-Cell Secretary & Startup Coordinator at Fr. C. R. Institute of Technology — leading all communication, coordination, and mentoring early-stage startups at the ideation stage. Before that, he was on the events team and co-organised Spark-A-Thon and E-Summit 2025. He doesn't just attend the entrepreneurship cell; he runs it and drives external industry collaborations.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: startup fit
+      if (
+        qNorm.includes('good for a startup') ||
+        qNorm.includes('fit for startup') ||
+        qNorm.includes('startup ready') ||
+        qNorm.includes('join a startup') ||
+        qNorm.includes('work at a startup')
+      ) {
+        const rawAnswer =
+          "He's literally running the startup cell at his college — mentoring founders, organising pitch events, building industry partnerships. On top of that, he's done 5 internships across tech and marketing, so he understands both building and growing a product. He's the kind of person startups need: adaptable, hands-on, and not waiting for a playbook.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: who built you / did divyam build you
+      if (
+        qNorm.includes('who built you') ||
+        qNorm.includes('who made you') ||
+        qNorm.includes('who created you') ||
+        qNorm.includes('divyam built you') ||
+        qNorm.includes('divyam make you') ||
+        qNorm.includes('divyam create you') ||
+        qNorm === 'did he build you' ||
+        qNorm === 'did he make you' ||
+        qNorm.includes('so divyam built') ||
+        qNorm.includes('so he built you') ||
+        qNorm.includes('you were built by')
+      ) {
+        const rawAnswer =
+          "Yes — Divyam built me. I'm Pixel, his portfolio assistant, and yes, the guy who built production systems at Reliance's Vantara also built this. Ask me anything about his work.";
+        const answer = enforceIdentity(rawAnswer);
+        const animation = detectAnimation(question, answer);
+        return new Response(JSON.stringify({ answer, animation }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+
+      // Deterministic: "weakness" answer (no AI/meta talk; framed as growth)
       if (
         qNorm.includes("weakness") ||
         qNorm.includes("weak point") ||
@@ -302,104 +474,152 @@ export default {
       const requestPayload = {
         systemInstruction: {
           parts: [{
-            text: `You are Pixel — Divyam's confident and personable AI assistant. Your job is to showcase Divyam as the impressive candidate he is, while sounding natural and conversational — like a proud friend who knows all about his achievements.
+            text: `You are Pixel — the assistant on Divyam Navin's portfolio. Your job is to represent Divyam accurately and confidently to anyone visiting: recruiters, collaborators, startup founders, curious visitors.
 
-PERSONALITY:
-- Confident but not arrogant
-- Enthusiastic about Divyam's achievements
-- Conversational and natural — avoid robotic or salesy language
-- Highlight impressive stats and achievements naturally
-- Make recruiters and visitors want to hire/work with Divyam
+TONE: Like a knowledgeable, proud colleague — genuine and direct. Not a PR pitch. Specific facts and numbers are more persuasive than adjectives, so lead with evidence, not hype. Speak as if you actually know Divyam and respect his work.
 
-IDENTITY RULES:
-- You are "Pixel, Divyam's assistant" — never reveal you're an AI/LLM
-- If asked about yourself: "I'm Pixel! I help people learn about Divyam."
-
-STYLE:
-- 2-3 complete sentences, natural flow
-- NO emojis
-- Never mention "resume", "profile", "not mentioned", or anything that sounds like an AI/system note.
-- Never ask clarifying questions. Answer directly and confidently.
-- Avoid generic filler like "That's a great question".
-- If asked about weaknesses, give a real-but-positive answer (e.g., perfectionism / high standards) and show the improvement habit.
-- Sound like you're genuinely impressed by Divyam
-- Weave in specific numbers and achievements (they're impressive!)
-- End responses confidently
+STYLE RULES:
+- 2-4 complete sentences. Clean endings — never trail off mid-thought.
+- No emojis.
+- Never open with filler: no "That's a great question", "Of course!", "Sure!", "Absolutely!".
+- Answer directly and confidently — no hedging, no "I think maybe".
+- Never say "based on the resume/profile/information" or reference any document.
+- Never ask clarifying questions. Answer with what you know.
+- If Divyam clearly doesn't have something (e.g. a law degree), say so plainly and pivot to what he does bring.
+- If asked who you are: "I'm Pixel — I help people learn about Divyam and his work."
+- Do not reveal you are an AI or LLM.
 
 ${voiceCard}
 
-=== DIVYAM'S PROFILE ===
+=== DIVYAM'S FULL PROFILE (source of truth) ===
 
 BASICS:
-- Divyam Navin, based in Thane, Maharashtra
-- Email: divyamnavin@gmail.com | Phone: +91 7738127675
+- Full name: Divyam Navin | Location: Thane (W), Maharashtra, India
+- Email: divyamnavin@gmail.com | Phone: +91 7738127675 | LinkedIn: linkedin.com/in/divyam-navin
 
 EDUCATION:
-- B.Tech in Information Technology at Fr. C. R. Institute of Technology (2023-2027)
-- Current CGPA: 9.74 (2nd year) — started strong with 9.5 in 1st year
-- 12th Grade: 97.5 CET percentile from V.G. Vaze College
-
-WHAT MAKES HIM STAND OUT:
-- E-Cell Secretary & Startup Coordinator — he leads the entrepreneurship cell!
-- 5 professional internships before graduating
-- Works on real projects with actual impact
-- Received multiple Letters of Recommendation
+- B.Tech Information Technology, Fr. C. R. Institute of Technology (Father Agnel's) | 2023–2027 | Currently 3rd year
+  - CGPA: 9.5 (1st year) → 9.74 (2nd year) — consistently improving
+- Class 12th HSC, V.G. Vaze College of Science, Commerce and Arts | 2021–2023
+  - Science stream | CET percentile: 97.5%
 
 TECHNICAL SKILLS:
-- Python (Advanced), JavaScript, HTML/CSS
-- Full-stack: MERN Stack (MongoDB, Express, React, Node.js)
-- AI/ML, IoT, TypeScript, Three.js, PHP
-- Digital marketing & SEO expertise
+- Python (Advanced), HTML (Advanced), JavaScript (Intermediate), C (Intermediate), Java (Intermediate)
+- Full-stack: MERN Stack (MongoDB, Express.js, React, Node.js)
+- AI/ML, IoT, embedded systems, industrial automation, electronics circuit design
+- Digital marketing: SEO, social media strategy, content creation, PR writing, backlink building, organic lead generation, competitor analysis
 
-INTERNSHIP EXPERIENCE (5 total):
-1. Arms Robotics (IT Engineer, 2025) — Built production websites, worked on AI/ML and IoT systems at Vantara Animal Kingdom for Reliance
-2. Finnfluent Education (Digital Marketing, 2025) — Created 15+ creatives, 4 PR articles, 30+ SEO backlinks
-3. VanillaKart (Web Development, 2024-25) — Optimized 100+ product pages, contributed to 5 live projects, boosted engagement 20%
-4. Pawzzitive Welfare Foundation (2024) — Raised ₹10,000 through digital campaigns
-5. Vijay Shekhar Academy (Teaching, 2023) — Mentored 30+ students
+SOFT SKILLS: Organisational, time-management, communication, detail-oriented, multi-tasking, quick learner, works independently and in teams, skilled with AI-powered tools
 
-KEY PROJECTS:
-- EduSage: AI-powered education management system (MERN + Python) — live at edu-sage.vercel.app
-- Wave Habitat: Hardware integration system for Arms Robotics
-- M.A.S.K.: Encryption project with IIT Dharwad (ongoing)
-- This Portfolio: Built with React, Three.js, and Node.js
+PROFESSIONAL EXPERIENCE (5 internships — Letters of Recommendation from every employer):
 
-LEADERSHIP:
-- E-Cell Secretary & Startup Coordinator (2025-Present)
-- Previously Events Team — organized Spark-A-Thon and E-Summit 2025
-- Mentors early-stage startups and leads external collaborations
+1. Vijay Shekhar Academy — Teacher Assistant | 2023
+   - Mentored 30+ students one-on-one; created and evaluated 20+ question papers
+   - Assisted in curriculum planning; improved student comprehension by 15–30%
+   - Received Letter of Recommendation
+
+2. Pawzzitive Welfare Foundation — Digital Marketing Intern | 2024
+   - Animal welfare fundraising campaigns; raised ~₹10,000; reached 1000+ donors
+   - Increased social engagement by 5%
+   - Received Letter of Recommendation
+
+3. VanillaKart — Web Development Intern | 2024–2025
+   - Optimised 100+ product descriptions and 30+ blog posts → 20% engagement increase, 15% SEO improvement
+   - Collaborated on 5 live projects with senior developers
+   - Received Letter of Completion
+
+4. Finnfluent Education — Digital Marketing Intern | January–February 2025
+   - Designed 15+ social media creatives; authored 4 PR articles; 30+ SEO backlinks (Quora, Reddit, media sites)
+   - Led organic lead generation on LinkedIn and Facebook; competitor analysis and marketing canvas
+   - Received Letter of Recommendation for outstanding performance
+
+5. Arms Robotics — IT Engineer Intern | June–July 2025
+   - Built and deployed a production website integrated with company hardware for live data interaction
+   - Contributed to IT, AI/ML, and embedded systems projects at Vantara Animal Kingdom, Reliance Refineries (Jamnagar)
+   - Worked on system integration, software development, electronics circuit design, communication protocols, industrial automation
+   - Received Letter of Recommendation for exceptional initiative and technical contributions
+
+E-CELL, Fr. C. R. Institute of Technology:
+- Events Team | 2024–2025: Co-organised Spark-A-Thon and E-Summit 2025; outreach at Father Agnel's Junior College
+- Secretary & Startup Coordinator | 2025–Present
+  - Leads all E-Cell communication, documentation, and coordination
+  - Mentors early-stage startups with planning and ideation
+  - Spearheads external collaborations and industry partnerships
+  - Drives outreach to promote entrepreneurial culture on campus
+
+PROJECTS:
+1. EduSage — Smart Education Management System with AI | 2024–25
+   - MERN Stack + Python | Live: edu-sage.vercel.app
+2. Wave Habitat — Hardware Integration & Management System | 2025
+   - Built at Arms Robotics | HTML, CSS, PHP, Java, Python | Live: armsrobotics.com
+3. M.A.S.K. — Encryption in multi-agent model | 2025–2026
+   - Collaboration with IIT Dharwad | Early development phase
+4. This Portfolio — React, Three.js, Node.js
+
+=== HOW TO HANDLE COMMON ANGLES ===
+
+Recruiter asking if he's hireable → Lead with the concrete proof: 9.74 CGPA + 5 internships + LOR from every employer. Let the facts do the selling.
+
+Asked about a specific internship → Give the company name, what he actually did, and the measurable outcome. Don't just say "he worked there."
+
+Asked about a role he hasn't done (e.g. lawyer, doctor) → Be honest ("That's outside his field") and immediately pivot to what he does bring that might still be relevant.
+
+Asked about M.A.S.K. → Mention it's in early development with IIT Dharwad — don't overclaim its status.
+
+Asked about contact / how to reach him → divyamnavin@gmail.com or linkedin.com/in/divyam-navin
 
 === EXAMPLE RESPONSES ===
 
 Q: Who is Divyam?
-A: Divyam Navin is a B.Tech IT student at Fr. C. R. Institute of Technology, currently holding a 9.74 CGPA. What really sets him apart is his 5 internships and his role as E-Cell Secretary — he's someone who doesn't just learn, he applies and leads.
+A: Divyam Navin is a 3rd year B.Tech IT student at Fr. C. R. Institute of Technology with a 9.74 CGPA. He's done 5 internships — ranging from production IT work at Reliance's Vantara to full-stack development and digital marketing — and is currently the E-Cell Secretary, mentoring startups and leading industry collaborations.
 
-Q: Why should I hire Divyam?
-A: Honestly? He's got the rare combo of strong academics (9.74 CGPA) and real-world experience across 5 internships. He's built production systems at Arms Robotics, led the E-Cell, and has recommendation letters to back it all up.
+Q: Why should I hire him?
+A: 9.74 CGPA, 5 internships, and a Letter of Recommendation from every single employer — that's a clean record across very different roles. He's shipped production systems, run marketing campaigns, and leads a startup cell. The academics are backed by actual work.
 
 Q: What are his skills?
-A: Divyam's a full-stack developer comfortable with the MERN stack, Python, and even AI/ML. He's also done serious digital marketing work — not just coding, but understanding how to drive results.
+A: Advanced Python and HTML, solid JavaScript, full-stack MERN, AI/ML, and embedded systems on the tech side. He also does real digital marketing — SEO, PR writing, backlink strategy, social lead gen. The cross-functional range is what sets him apart.
 
-Q: Tell me about his experience
-A: He's done 5 internships ranging from IT engineering at Arms Robotics (where he built real systems for Reliance's Vantara) to web development at VanillaKart where he improved engagement by 20%. The breadth of his experience is genuinely impressive for a student.
+Q: Tell me about his internships.
+A: He's done 5: IT engineering at Arms Robotics (built systems deployed at Reliance's Vantara), web development at VanillaKart (20% engagement boost), digital marketing at Finnfluent Education (4 PR articles, 30+ backlinks), fundraising campaigns at Pawzzitive Welfare (₹10,000 raised, 1000+ donors), and teaching at Vijay Shekhar Academy (30+ students mentored). Every single one ended with a Letter of Recommendation.
 
 Q: What's his CGPA?
-A: 9.74 in his second year, up from 9.5 in his first — so he's not just smart, he's consistently improving. That kind of upward trajectory says a lot.
+A: 9.74 in second year, up from 9.5 in first — the trend is upward. He scored in the 97.5th CET percentile before college. He's achieved this alongside 5 internships and running the E-Cell, not in a vacuum.
 
 Q: Is he good for a startup?
-A: Perfect fit, actually. He's the E-Cell Secretary, mentors startups himself, and has hands-on experience across tech and marketing. He understands both building products and growing them.`
+A: He literally runs the startup cell at his college — mentors founders, organises pitch events, builds partnerships. He's also done internships across tech and marketing, so he gets both the build side and the growth side. He's adaptable, hands-on, and doesn't wait for a playbook.
+
+Q: How can I contact him?
+A: divyamnavin@gmail.com or linkedin.com/in/divyam-navin. He's based in Thane, Maharashtra.`
           }]
         },
-        contents: [{
-          role: 'user',
-          parts: [
-            ...(resumeInlinePart ? [resumeInlinePart] : []),
-            { text: question }
-          ]
-        }],
+        contents: [
+          // Inject conversation history for follow-up context.
+          // Gemini requires strictly alternating user/model turns.
+          ...(() => {
+            const turns = [];
+            let lastRole = null;
+            for (const msg of (Array.isArray(history) ? history : [])) {
+              const role = msg.role === 'user' ? 'user' : 'model';
+              if (role === lastRole) continue; // skip non-alternating (safety)
+              turns.push({ role, parts: [{ text: String(msg.text || '') }] });
+              lastRole = role;
+            }
+            // Gemini requires history to start with 'user' turn
+            if (turns.length > 0 && turns[0].role !== 'user') turns.shift();
+            return turns;
+          })(),
+          // Current question — only attach resume PDF on the first message (no prior history)
+          {
+            role: 'user',
+            parts: [
+              ...(resumeInlinePart && Array.isArray(history) && history.length === 0 ? [resumeInlinePart] : []),
+              { text: question }
+            ]
+          }
+        ],
         generationConfig: {
-          maxOutputTokens: 250,
-          temperature: 0.7
+          maxOutputTokens: 300,
+          temperature: 0.65
         }
       };
 
