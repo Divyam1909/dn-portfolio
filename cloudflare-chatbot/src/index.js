@@ -128,7 +128,7 @@ function detectAnimation(question, answer) {
   const insultRx = /\b(stupid|dumb|idiot|useless|terrible|worst|annoying|sucks?|trash|garbage|pathetic|worthless|moron|fool|ugly|boring|lame|awful)\b|bad bot|hate you|shut up/;
   if (insultRx.test(q)) return 'Punch';
 
-  const notQualifiedRx = /not appear|not qualified|no mention|doesn't have|does not have|not his field|not exactly|not suited|no experience in|no qualifications|cannot work as|isn't qualified|no law degree|not a lawyer|not be a|outside his field/;
+  const notQualifiedRx = /not appear|not qualified|no mention|doesn't have|does not have|not his field|not exactly|not suited|no experience in|no qualifications|cannot work as|isn't qualified|no law degree|not a lawyer|not be a|outside (of )?(his|divyam's) field/;
   if (notQualifiedRx.test(a)) return 'No';
 
   const negativeRx = /unfortunately|sorry, but|not really|doesn't seem|\bcannot\b|isn't able|aren't any|no information|not available|not found|couldn't find/;
