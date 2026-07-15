@@ -42,9 +42,6 @@ build/
 # Cloudflare Wrangler (local)
 .wrangler/
 
-# Production
-/public/uploads/*.pdf
-
 # Misc
 .DS_Store
 .env.local
@@ -57,3 +54,4 @@ yarn-debug.log*
 yarn-error.log*
 
 node_modules
+.dev.vars
